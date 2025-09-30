@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Navigation />
+    <Navigation v-if="!isLoginPage" />
     <transition name="fade" mode="out-in">
       <router-view />
     </transition>
@@ -8,7 +8,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import Navigation from './components/Navigation.vue'
+
+const route = useRoute()
+const isLoginPage = computed(() => route.path === '/login')
 </script>
 
 <style>

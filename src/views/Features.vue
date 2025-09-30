@@ -3,12 +3,7 @@
     <div class="container mx-auto px-4 py-16">
       <!-- 页面标题 -->
       <div class="text-center mb-16">
-        <h1 class="text-5xl font-bold text-gray-800 mb-6">
-          功能中心
-        </h1>
-        <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          探索我们提供的各种功能和服务，每个功能都经过精心设计，为您提供最佳的使用体验
-        </p>
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">功能中心</h1>
       </div>
 
       <!-- 功能分类标签 -->

@@ -2,14 +2,6 @@
   <nav class="bg-white shadow-lg sticky top-0 z-50">
     <div class="container mx-auto px-4">
       <div class="flex justify-between items-center h-16">
-        <!-- Logo -->
-        <router-link
-          to="/"
-          class="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors"
-        >
-          Vue Router App
-        </router-link>
-
       </div>
     </div>
   </nav>

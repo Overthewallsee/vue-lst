@@ -6,6 +6,7 @@ import Projects from '../views/Projects.vue'
 import ProjectDetail from '../views/ProjectDetail.vue'
 import NotFound from '../views/NotFound.vue'
 import login from '../views/login.vue'
+import Features from '../views/Features.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -26,6 +27,14 @@ const router = createRouter({
             title: '登录'
           }
        },
+    {
+      path: '/features',
+      name: 'Features',
+      component: Features,
+      meta: {
+        title: '功能中心'
+      }
+    },
     {
       path: '/about',
       name: 'About',

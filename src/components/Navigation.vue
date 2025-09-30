@@ -81,6 +81,7 @@ const isMobileMenuOpen = ref(false)
 
 const navigationItems: NavigationItem[] = [
   { name: '首页', path: '/' },
+  { name: '功能中心', path: '/features' },
   { name: '关于', path: '/about' },
   { name: '项目', path: '/projects' },
   { name: '联系', path: '/contact' }

@@ -1,135 +1,102 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-    <div class="container mx-auto px-4 py-16">
-      <!-- 页面标题 -->
-      <div class="text-center mb-16">
-        <h1 class="text-5xl font-bold text-gray-800 mb-6">
-          功能中心
-        </h1>
-        <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          探索我们提供的各种功能和服务，每个功能都经过精心设计，为您提供最佳的使用体验
-        </p>
+  <div class="features-page">
+    <!-- 页面头部 -->
+    <header class="page-header">
+      <div class="header-content">
+        <h1 class="page-title">探索我们的功能</h1>
+        <p class="page-subtitle">Discover the powerful features that make our platform stand out</p>
       </div>
+    </header>
 
-      <!-- 功能分类标签 -->
-      <div class="flex flex-wrap justify-center gap-3 mb-12">
+    <!-- 分类筛选 -->
+    <div class="category-filter">
+      <div class="filter-container">
         <button
           v-for="category in categories"
           :key="category"
           @click="selectedCategory = category"
-          class="px-6 py-2 rounded-full font-medium transition-all duration-300"
-          :class="selectedCategory === category 
-            ? 'bg-blue-600 text-white shadow-lg transform scale-105' 
-            : 'bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600 shadow-md'"
+          class="filter-btn"
+          :class="{ active: selectedCategory === category }"
         >
           {{ category }}
         </button>
       </div>
+    </div>
 
-      <!-- 功能卡片网格 -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
-        <div
-          v-for="feature in filteredFeatures"
-          :key="feature.id"
-          class="feature-card group cursor-pointer"
-          @click="handleFeatureClick(feature)"
-        >
-          <!-- 卡片头部 -->
-          <div class="card-header" :style="{ background: feature.gradient }">
-            <div class="icon-container">
-              <span class="feature-icon">{{ feature.icon }}</span>
-            </div>
-            <div class="status-badge" :class="getStatusBadgeClass(feature.status)">
+    <!-- 功能网格 -->
+    <section class="features-grid">
+      <div 
+        v-for="feature in filteredFeatures" 
+        :key="feature.id"
+        class="feature-card"
+        @click="openModal(feature)"
+      >
+        <div class="card-gradient" :style="{ background: feature.gradient }"></div>
+        <div class="card-content">
+          <div class="feature-icon">{{ feature.icon }}</div>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-description">{{ feature.description }}</p>
+          <div class="feature-meta">
+            <span class="feature-category">{{ feature.category }}</span>
+            <span 
+              class="feature-status" 
+              :class="getStatusClass(feature.status)"
+            >
               {{ feature.status }}
-            </div>
+            </span>
           </div>
-          
-          <!-- 卡片内容 -->
-          <div class="card-content">
-            <h3 class="feature-title">
-              {{ feature.title }}
-            </h3>
-            <p class="feature-description">
-              {{ feature.description }}
-            </p>
-            
-            <!-- 技术标签 -->
-            <div class="tech-tags" v-if="feature.tags">
-              <span 
-                v-for="tag in feature.tags" 
-                :key="tag"
-                class="tech-tag"
-              >
-                {{ tag }}
-              </span>
-            </div>
-            
-            <!-- 卡片底部 -->
-            <div class="card-footer">
-              <span class="category-label">{{ feature.category }}</span>
-              <div class="arrow-icon">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 悬停遮罩 -->
-          <div class="hover-overlay"></div>
         </div>
       </div>
+    </section>
 
-      <!-- 统计信息 -->
-      <div class="mt-20 grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
-        <div class="stat-card">
-          <div class="stat-icon">🚀</div>
-          <div class="stat-number">{{ stats.totalFeatures }}</div>
+    <!-- 统计信息 -->
+    <section class="stats-section">
+      <div class="stats-container">
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.totalFeatures }}</div>
           <div class="stat-label">总功能数</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon">✅</div>
-          <div class="stat-number">{{ stats.activeFeatures }}</div>
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.activeFeatures }}</div>
           <div class="stat-label">可用功能</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon">🔧</div>
-          <div class="stat-number">{{ stats.developingFeatures }}</div>
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.developingFeatures }}</div>
           <div class="stat-label">开发中</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon">⏳</div>
-          <div class="stat-number">{{ stats.comingSoon }}</div>
+        <div class="stat-item">
+          <div class="stat-value">{{ stats.comingSoon }}</div>
           <div class="stat-label">即将推出</div>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- 功能详情模态框 -->
-    <div
-      v-if="selectedFeature"
-      class="modal-overlay"
-      @click="closeModal"
-    >
+    <div v-if="selectedFeature" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
-        <!-- 模态框头部 -->
+        <button class="modal-close" @click="closeModal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        
         <div class="modal-header">
-          <div 
-            class="modal-icon"
-            :style="{ background: selectedFeature.gradient }"
-          >
+          <div class="modal-icon" :style="{ background: selectedFeature.gradient }">
             {{ selectedFeature.icon }}
           </div>
-          <h3 class="modal-title">{{ selectedFeature.title }}</h3>
-          <p class="modal-subtitle">{{ selectedFeature.description }}</p>
+          <h2 class="modal-title">{{ selectedFeature.title }}</h2>
+          <p class="modal-description">{{ selectedFeature.description }}</p>
         </div>
         
-        <!-- 模态框内容 -->
         <div class="modal-body">
-          <div class="info-grid">
+          <div class="modal-info">
             <div class="info-item">
               <span class="info-label">状态</span>
-              <span class="info-value" :class="getStatusClass(selectedFeature.status)">
+              <span 
+                class="info-value" 
+                :class="getStatusClass(selectedFeature.status)"
+              >
                 {{ selectedFeature.status }}
               </span>
             </div>
@@ -143,32 +110,33 @@
             </div>
           </div>
           
-          <!-- 功能特性 -->
-          <div class="features-list" v-if="selectedFeature.features">
-            <h4 class="features-title">主要特性</h4>
-            <ul class="features-items">
+          <div class="feature-details" v-if="selectedFeature.features">
+            <h3 class="details-title">主要特性</h3>
+            <ul class="features-list">
               <li v-for="item in selectedFeature.features" :key="item" class="feature-item">
-                <span class="feature-dot"></span>
-                {{ item }}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>{{ item }}</span>
               </li>
             </ul>
           </div>
         </div>
         
-        <!-- 模态框底部 -->
         <div class="modal-footer">
-          <button
-            v-if="selectedFeature.status === '可用'"
+          <button 
+            v-if="selectedFeature.status === '可用'" 
             class="btn-primary"
             @click="launchFeature(selectedFeature)"
           >
-            <span>立即体验</span>
-            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-            </svg>
+            立即体验
           </button>
-          <button class="btn-secondary" @click="closeModal">
-            关闭
+          <button 
+            v-else 
+            class="btn-secondary"
+            @click="showComingSoon"
+          >
+            敬请期待
           </button>
         </div>
       </div>
@@ -299,56 +267,6 @@ const features: Feature[] = [
     features: ['富文本编辑', 'Markdown支持', '多媒体插入', '云端同步', '标签分类'],
     updateTime: '2024-01-11',
     route: '/notes'
-  },
-  {
-    id: 9,
-    title: '图片编辑',
-    description: '在线图片编辑工具，支持滤镜、裁剪、调色等专业编辑功能',
-    icon: '🎨',
-    gradient: 'linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%)',
-    status: '开发中',
-    category: '创意工具',
-    tags: ['图片编辑', '滤镜'],
-    features: ['图片裁剪', '滤镜效果', '颜色调整', '图层管理', '批量处理'],
-    updateTime: '2024-01-07'
-  },
-  {
-    id: 10,
-    title: '音乐播放器',
-    description: '在线音乐播放器，支持播放列表、歌词显示和音质调节',
-    icon: '🎵',
-    gradient: 'linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%)',
-    status: '即将推出',
-    category: '娱乐',
-    tags: ['音乐播放', '歌词'],
-    features: ['音乐播放', '播放列表', '歌词显示', '音质调节', '收藏功能'],
-    updateTime: '2024-01-02'
-  },
-  {
-    id: 11,
-    title: '天气预报',
-    description: '实时天气信息服务，提供详细的天气数据和未来预报',
-    icon: '🌤️',
-    gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-    status: '可用',
-    category: '生活服务',
-    tags: ['天气', '预报'],
-    features: ['实时天气', '未来预报', '天气地图', '生活指数', '预警提醒'],
-    updateTime: '2024-01-13',
-    route: '/weather'
-  },
-  {
-    id: 12,
-    title: '计算器',
-    description: '科学计算器工具，支持基础运算和高级数学函数计算',
-    icon: '🔢',
-    gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-    status: '可用',
-    category: '工具',
-    tags: ['计算', '数学'],
-    features: ['基础运算', '科学计算', '历史记录', '单位转换', '公式存储'],
-    updateTime: '2024-01-09',
-    route: '/calculator'
   }
 ]
 
@@ -374,30 +292,17 @@ const stats = computed(() => ({
 const getStatusClass = (status: string) => {
   switch (status) {
     case '可用':
-      return 'text-green-600 font-semibold'
-    case '开发中':
-      return 'text-yellow-600 font-semibold'
-    case '即将推出':
-      return 'text-blue-600 font-semibold'
-    default:
-      return 'text-gray-600'
-  }
-}
-
-const getStatusBadgeClass = (status: string) => {
-  switch (status) {
-    case '可用':
-      return 'status-available'
+      return 'status-active'
     case '开发中':
       return 'status-developing'
     case '即将推出':
       return 'status-coming'
     default:
-      return 'status-default'
+      return ''
   }
 }
 
-const handleFeatureClick = (feature: Feature) => {
+const openModal = (feature: Feature) => {
   selectedFeature.value = feature
 }
 
@@ -409,230 +314,490 @@ const launchFeature = (feature: Feature) => {
   if (feature.route) {
     router.push(feature.route)
   } else {
-    alert(`${feature.title} 功能即将推出，敬请期待！`)
+    showComingSoon()
   }
-  closeModal()
+}
+
+const showComingSoon = () => {
+  alert('功能即将推出，敬请期待！')
 }
 </script>
 
 <style scoped>
-/* 功能卡片样式 */
+.features-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
+  padding: 2rem 1rem;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem 0;
+}
+
+.header-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+.category-filter {
+  margin-bottom: 3rem;
+}
+
+.filter-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.filter-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  color: #555;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.filter-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto 4rem;
+}
+
 .feature-card {
-  @apply relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 overflow-hidden;
-  min-height: 320px;
-}
-
-.card-header {
-  @apply relative h-32 flex items-center justify-center;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.icon-container {
-  @apply relative z-10;
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-.feature-icon {
-  @apply text-4xl;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-}
-
-.status-badge {
-  @apply absolute top-3 right-3 px-3 py-1 text-xs font-bold rounded-full;
-}
-
-.status-available {
-  @apply bg-green-500 text-white;
-}
-
-.status-developing {
-  @apply bg-yellow-500 text-white;
-}
-
-.status-coming {
-  @apply bg-blue-500 text-white;
-}
-
-.status-default {
-  @apply bg-gray-500 text-white;
-}
-
-.card-content {
-  @apply p-6 flex flex-col h-full;
-}
-
-.feature-title {
-  @apply text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors;
-}
-
-.feature-description {
-  @apply text-gray-600 text-sm leading-relaxed mb-4 flex-grow;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+.card-gradient {
+  height: 120px;
+  position: relative;
   overflow: hidden;
 }
 
-.tech-tags {
-  @apply flex flex-wrap gap-2 mb-4;
+.card-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  filter: blur(20px);
+  opacity: 0.7;
+  transform: scale(1.2);
 }
 
-.tech-tag {
-  @apply px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md font-medium;
+.card-content {
+  padding: 1.5rem;
+  position: relative;
+  z-index: 2;
 }
 
-.card-footer {
-  @apply flex items-center justify-between mt-auto;
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: block;
 }
 
-.category-label {
-  @apply text-sm text-gray-500 font-medium;
+.feature-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 0.75rem;
 }
 
-.arrow-icon {
-  @apply text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300;
+.feature-description {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
 }
 
-.hover-overlay {
-  @apply absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300;
+.feature-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* 统计卡片样式 */
-.stat-card {
-  @apply bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1;
+.feature-category {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
-.stat-icon {
-  @apply text-3xl mb-3;
+.feature-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
 }
 
-.stat-number {
-  @apply text-3xl font-bold text-gray-800 mb-2;
+.status-active {
+  background: rgba(67, 233, 123, 0.15);
+  color: #2ecc71;
+}
+
+.status-developing {
+  background: rgba(241, 196, 15, 0.15);
+  color: #f39c12;
+}
+
+.status-coming {
+  background: rgba(52, 152, 219, 0.15);
+  color: #3498db;
+}
+
+.stats-section {
+  margin: 4rem 0;
+}
+
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.stat-item {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-5px);
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
 }
 
 .stat-label {
-  @apply text-gray-600 font-medium;
+  color: #666;
+  font-weight: 500;
+  font-size: 1rem;
 }
 
 /* 模态框样式 */
 .modal-overlay {
-  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
-  backdrop-filter: blur(4px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(5px);
 }
 
 .modal-content {
-  @apply bg-white rounded-2xl max-w-lg w-full transform transition-all;
-  animation: modalSlideIn 0.3s ease-out;
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalSlideIn 0.4s ease-out;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
 }
 
-.modal-header {
-  @apply text-center p-8 pb-4;
-}
-
-.modal-icon {
-  @apply w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center text-4xl;
-}
-
-.modal-title {
-  @apply text-2xl font-bold text-gray-800 mb-2;
-}
-
-.modal-subtitle {
-  @apply text-gray-600 leading-relaxed;
-}
-
-.modal-body {
-  @apply px-8 pb-4;
-}
-
-.info-grid {
-  @apply grid grid-cols-1 gap-4 mb-6;
-}
-
-.info-item {
-  @apply flex justify-between items-center py-2 border-b border-gray-100;
-}
-
-.info-label {
-  @apply text-gray-600 font-medium;
-}
-
-.info-value {
-  @apply text-gray-800 font-semibold;
-}
-
-.features-list {
-  @apply mt-6;
-}
-
-.features-title {
-  @apply text-lg font-semibold text-gray-800 mb-3;
-}
-
-.features-items {
-  @apply space-y-2;
-}
-
-.feature-item {
-  @apply flex items-center text-gray-600;
-}
-
-.feature-dot {
-  @apply w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0;
-}
-
-.modal-footer {
-  @apply flex space-x-3 p-8 pt-4;
-}
-
-.btn-primary {
-  @apply flex-1 bg-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center;
-}
-
-.btn-secondary {
-  @apply flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-colors;
-}
-
-/* 动画效果 */
 @keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: scale(0.9) translateY(-20px);
+    transform: translateY(30px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-/* 响应式优化 */
-@media (max-width: 640px) {
-  .feature-card {
-    @apply hover:transform-none hover:translate-y-0;
-    min-height: 280px;
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.modal-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.modal-header {
+  padding: 2.5rem 2rem 1.5rem;
+  text-align: center;
+}
+
+.modal-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 0.75rem;
+}
+
+.modal-description {
+  color: #666;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.modal-body {
+  padding: 0 2rem 1.5rem;
+}
+
+.modal-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 16px;
+}
+
+.info-item {
+  text-align: center;
+}
+
+.info-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.info-value {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.status-active {
+  color: #2ecc71;
+}
+
+.status-developing {
+  color: #f39c12;
+}
+
+.status-coming {
+  color: #3498db;
+}
+
+.feature-details {
+  margin-top: 1.5rem;
+}
+
+.details-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.features-list {
+  list-style: none;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  color: #555;
+}
+
+.feature-item svg {
+  color: #2ecc71;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.modal-footer {
+  padding: 1.5rem 2rem 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-primary, .btn-secondary {
+  flex: 1;
+  padding: 1rem;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6);
+}
+
+.btn-secondary {
+  background: #f1f3f5;
+  color: #666;
+}
+
+.btn-secondary:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .features-page {
+    padding: 1rem;
   }
   
-  .card-header {
-    @apply h-24;
+  .page-title {
+    font-size: 2rem;
   }
   
-  .feature-icon {
-    @apply text-3xl;
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
   
-  .card-content {
-    @apply p-4;
+  .filter-container {
+    gap: 0.5rem;
   }
   
-  .feature-title {
-    @apply text-lg;
+  .filter-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .stats-container {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .modal-info {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .modal-header {
+    padding: 2rem 1.5rem 1rem;
+  }
+  
+  .modal-body, .modal-footer {
+    padding: 0 1.5rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-container {
+    grid-template-columns: 1fr;
   }
   
   .modal-content {
-    @apply mx-4;
-  }
-  
-  .modal-header, .modal-body, .modal-footer {
-    @apply px-6;
+    margin: 1rem;
   }
 }
 </style>

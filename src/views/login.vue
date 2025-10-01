@@ -1,45 +1,115 @@
 <script setup>
 import { ref, computed } from 'vue'
 import CryptoJS from 'crypto-js'
+import { API_BASE_URL } from '@/api/config'
+
+const isLogin = ref(true) // 控制当前是登录还是注册界面
 
 const form = ref({
-  phone: '',
+  username: '', // 添加用户名字段
+  phoneNumber: '', // 将 phone 改为 phoneNumber
   password: '',
+  confirmPassword: '', // 注册时需要确认密码
   remember: true,
 })
 
 const loading = ref(false)
-const touched = ref({ phone: false, password: false })
+const touched = ref({ username: false, phoneNumber: false, password: false, confirmPassword: false })
 const errorMessage = ref('')
 const successMessage = ref('')
 
-const phoneError = computed(() => {
-  if (!touched.value.phone) return ''
-  if (!form.value.phone) return '请输入手机号'
-  const ok = /^1[3-9]\d{9}$/.test(form.value.phone)
+const usernameError = computed(() => {
+  if (isLogin.value) return '' // 登录时不需要验证用户名
+  if (!touched.value.username) return ''
+  if (!form.value.username) return '请输入用户名'
+  if (form.value.username.length < 3) return '用户名至少3个字符'
+  if (form.value.username.length > 20) return '用户名不能超过20个字符'
+  return ''
+})
+
+const phoneNumberError = computed(() => {
+  if (!touched.value.phoneNumber) return ''
+  if (!form.value.phoneNumber) return '请输入手机号'
+  const ok = /^1[3-9]\d{9}$/.test(form.value.phoneNumber)
   return ok ? '' : '手机号格式不正确'
 })
 
 const passwordError = computed(() => {
   if (!touched.value.password) return ''
   if (!form.value.password) return '请输入密码'
-  return form.value.password.length >= 6 ? '' : '密码至少 6 位'
+  if (isLogin.value) {
+    return form.value.password.length >= 6 ? '' : '密码至少 6 位'
+  } else {
+    // 注册时密码要求
+    if (form.value.password.length < 8) return '密码至少 8 位'
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(form.value.password)) 
+      return '密码需包含大小写字母和数字'
+    return ''
+  }
+})
+
+const confirmPasswordError = computed(() => {
+  if (isLogin.value) return '' // 登录时不需要确认密码
+  if (!touched.value.confirmPassword) return ''
+  if (!form.value.confirmPassword) return '请确认密码'
+  return form.value.password === form.value.confirmPassword ? '' : '两次输入的密码不一致'
 })
 
 const canSubmit = computed(() => {
-  return (
-    form.value.phone &&
-    form.value.password &&
-    !phoneError.value &&
-    !passwordError.value &&
-    !loading.value
-  )
+  if (isLogin.value) {
+    return (
+      form.value.phoneNumber &&
+      form.value.password &&
+      !phoneNumberError.value &&
+      !passwordError.value &&
+      !loading.value
+    )
+  } else {
+    return (
+      form.value.username &&
+      form.value.phoneNumber &&
+      form.value.password &&
+      form.value.confirmPassword &&
+      !usernameError.value &&
+      !phoneNumberError.value &&
+      !passwordError.value &&
+      !confirmPasswordError.value &&
+      !loading.value
+    )
+  }
 })
 
 // 清除消息
 function clearMessages() {
   errorMessage.value = ''
   successMessage.value = ''
+}
+
+// 切换登录/注册
+function toggleForm() {
+  isLogin.value = !isLogin.value
+  // 切换时清除表单和错误信息
+  if (isLogin.value) {
+    // 切换到登录
+    form.value = {
+      username: '',
+      phoneNumber: '',
+      password: '',
+      confirmPassword: '',
+      remember: true,
+    }
+  } else {
+    // 切换到注册，填充默认值
+    form.value = {
+      username: 'user' + Math.floor(Math.random() * 10000),
+      phoneNumber: '138' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0'),
+      password: 'Test1234',
+      confirmPassword: 'Test1234',
+      remember: true,
+    }
+  }
+  touched.value = { username: false, phoneNumber: false, password: false, confirmPassword: false }
+  clearMessages()
 }
 
 // 密码加密函数
@@ -52,8 +122,12 @@ function encryptPassword(password) {
 
 async function onSubmit(e) {
   e.preventDefault()
-  touched.value.phone = true
+  touched.value.username = true
+  touched.value.phoneNumber = true
   touched.value.password = true
+  if (!isLogin.value) {
+    touched.value.confirmPassword = true
+  }
 
   if (!canSubmit.value) return
 
@@ -65,44 +139,63 @@ async function onSubmit(e) {
     // 加密密码
     const encryptedPassword = encryptPassword(form.value.password)
 
-    const response = await fetch('/lst/api/auth/login', {
+    // 使用 API_BASE_URL 构建完整 URL
+    const baseUrl = API_BASE_URL || ''
+    const endpoint = isLogin.value ? '/lst/api/auth/login' : '/lst/api/auth/register'
+    const url = `${baseUrl}${endpoint}`
+    
+    const requestBody = {
+      phoneNumber: form.value.phoneNumber, // 将发送给后端的字段改为 phoneNumber
+      password: encryptedPassword,
+      username: isLogin.value ? form.value.phoneNumber : form.value.username, // 登录时用户名默认为手机号
+    }
+
+    // 注册时添加额外字段
+    if (!isLogin.value) {
+      requestBody.remember = form.value.remember
+    }
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        phone: form.value.phone,
-        password: encryptedPassword,
-        remember: form.value.remember
-      })
+      body: JSON.stringify(requestBody)
     })
 
     const data = await response.json()
 
     if (response.ok) {
-      successMessage.value = `欢迎回来：${form.value.phone}`
-      // 登录成功后的处理逻辑
-      console.log('登录成功:', data)
+      if (isLogin.value) {
+        successMessage.value = `欢迎回来：${form.value.phoneNumber}`
+        // 登录成功后的处理逻辑
+        console.log('登录成功:', data)
 
-      // 如果返回了token，可以存储到localStorage
-      if (data.token) {
-        localStorage.setItem('token', data.token)
+        // 如果返回了token，可以存储到localStorage
+        if (data.token) {
+          localStorage.setItem('token', data.token)
+        }
+
+        // 如果返回了用户信息，可以存储到localStorage
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
+
+        // 可以在这里添加页面跳转逻辑
+        // window.location.href = '/dashboard'
+      } else {
+        successMessage.value = `注册成功：${form.value.username}，请登录`
+        // 注册成功后自动切换到登录界面
+        setTimeout(() => {
+          toggleForm()
+        }, 2000)
       }
-
-      // 如果返回了用户信息，可以存储到localStorage
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user))
-      }
-
-      // 可以在这里添加页面跳转逻辑
-      // window.location.href = '/dashboard'
-
     } else {
-      errorMessage.value = data.message || '登录失败，请检查手机号和密码'
+      errorMessage.value = data.message || (isLogin.value ? '登录失败，请检查手机号和密码' : '注册失败')
     }
 
   } catch (error) {
-    console.error('登录请求失败:', error)
+    console.error('请求失败:', error)
     errorMessage.value = '网络错误，请稍后重试'
   } finally {
     loading.value = false
@@ -146,8 +239,8 @@ async function onSubmit(e) {
             <span class="logo-text">LST</span>
           </div>
           <div class="meta">
-            <h1>欢迎登录</h1>
-            <p>使用你的账户开始高效的一天</p>
+            <h1>{{ isLogin ? '欢迎登录' : '欢迎注册' }}</h1>
+            <p>{{ isLogin ? '使用你的账户开始高效的一天' : '创建账户以开始使用我们的服务' }}</p>
           </div>
         </div>
 
@@ -162,17 +255,31 @@ async function onSubmit(e) {
             {{ successMessage }}
           </div>
 
+          <!-- 注册时需要用户名字段 -->
+          <label class="field" v-if="!isLogin">
+            <span>用户名</span>
+            <input
+              v-model.trim="form.username"
+              type="text"
+              placeholder="请输入用户名（3-20个字符）"
+              @blur="touched.username = true"
+              @input="clearMessages"
+              :aria-invalid="!!usernameError"
+            />
+            <div class="error" v-if="usernameError">{{ usernameError }}</div>
+          </label>
+
           <label class="field">
             <span>手机号</span>
             <input
-              v-model.trim="form.phone"
+              v-model.trim="form.phoneNumber"
               type="tel"
               placeholder="请输入11位手机号"
-              @blur="touched.phone = true"
+              @blur="touched.phoneNumber = true"
               @input="clearMessages"
-              :aria-invalid="!!phoneError"
+              :aria-invalid="!!phoneNumberError"
             />
-            <div class="error" v-if="phoneError">{{ phoneError }}</div>
+            <div class="error" v-if="phoneNumberError">{{ phoneNumberError }}</div>
           </label>
 
           <label class="field">
@@ -180,7 +287,7 @@ async function onSubmit(e) {
             <input
               v-model="form.password"
               type="password"
-              placeholder="至少 6 位"
+              :placeholder="isLogin ? '至少 6 位' : '至少 8 位，需包含大小写字母和数字'"
               @blur="touched.password = true"
               @input="clearMessages"
               :aria-invalid="!!passwordError"
@@ -188,7 +295,21 @@ async function onSubmit(e) {
             <div class="error" v-if="passwordError">{{ passwordError }}</div>
           </label>
 
-          <div class="row">
+          <!-- 注册时需要确认密码 -->
+          <label class="field" v-if="!isLogin">
+            <span>确认密码</span>
+            <input
+              v-model="form.confirmPassword"
+              type="password"
+              placeholder="请再次输入密码"
+              @blur="touched.confirmPassword = true"
+              @input="clearMessages"
+              :aria-invalid="!!confirmPasswordError"
+            />
+            <div class="error" v-if="confirmPasswordError">{{ confirmPasswordError }}</div>
+          </label>
+
+          <div class="row" v-if="isLogin">
             <label class="checkbox">
               <input type="checkbox" v-model="form.remember" /> 记住我
             </label>
@@ -196,14 +317,14 @@ async function onSubmit(e) {
           </div>
 
           <button class="btn primary lg submit" :disabled="!canSubmit">
-            {{ loading ? '正在登录…' : '登录' }}
+            {{ loading ? (isLogin ? '正在登录…' : '正在注册…') : (isLogin ? '登录' : '注册') }}
           </button>
 
           <div class="divider"><span>或</span></div>
 
           <div class="social">
             <button type="button" class="btn ghost">
-              <span class="ico">📧</span> 使用邮箱魔法链接
+              <span class="ico">📧</span> {{ isLogin ? '使用邮箱魔法链接' : '使用邮箱注册' }}
             </button>
             <button type="button" class="btn ghost">
               <span class="ico">🔐</span> 企业 SSO
@@ -212,7 +333,10 @@ async function onSubmit(e) {
         </form>
 
         <p class="hint">
-          还没有账号？<a class="link" href="javascript:void(0)">免费注册</a>
+          {{ isLogin ? '还没有账号？' : '已有账号？' }}
+          <a class="link" href="javascript:void(0)" @click="toggleForm">
+            {{ isLogin ? '免费注册' : '立即登录' }}
+          </a>
         </p>
       </section>
 

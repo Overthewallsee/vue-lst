@@ -2,8 +2,10 @@
 import { ref, computed } from 'vue'
 import CryptoJS from 'crypto-js'
 import { API_BASE_URL } from '@/api/config'
+import { useRouter } from 'vue-router'
 
 const isLogin = ref(true) // 控制当前是登录还是注册界面
+const router = useRouter() // 添加路由实例
 
 const form = ref({
   username: '', // 添加用户名字段
@@ -181,13 +183,13 @@ async function onSubmit(e) {
           localStorage.setItem('user', JSON.stringify(data.user))
         }
 
-        // 可以在这里添加页面跳转逻辑
-        // window.location.href = '/dashboard'
+        // 跳转到功能页面
+        router.push('/features')
       } else {
-        successMessage.value = `注册成功：${form.value.username}，请登录`
-        // 注册成功后自动切换到登录界面
+        successMessage.value = `注册成功：${form.value.username}`
+        // 注册成功后自动跳转到功能页面
         setTimeout(() => {
-          toggleForm()
+          router.push('/features')
         }, 2000)
       }
     } else {

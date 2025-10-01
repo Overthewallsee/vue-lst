@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <!-- <Navigation v-if="!isLoginPage" /> -->
+     <Navigation v-if="!isLoginPage" />
     <transition name="fade" mode="out-in">
       <router-view />
     </transition>
@@ -10,7 +10,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-// import Navigation from './components/Navigation.vue'
+import Navigation from './components/Navigation.vue'
 
 const route = useRoute()
 const isLoginPage = computed(() => route.path === '/login')
@@ -27,7 +27,9 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   line-height: 1.6;
   color: #333;
-  background-color: #f8fafc;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+  min-height: 100vh;
+  background-attachment: fixed;
 }
 
 #app {

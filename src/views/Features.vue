@@ -178,7 +178,7 @@ const features: Feature[] = [
     tags: ['实时通讯', 'WebSocket'],
     features: ['实时消息', '多人聊天', '表情支持', '文件分享', '消息历史'],
     updateTime: '2024-01-15',
-    route: '/chat'
+    route: '/features/chat'
   },
   {
     id: 2,

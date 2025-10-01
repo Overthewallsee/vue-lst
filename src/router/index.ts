@@ -7,6 +7,7 @@ import ProjectDetail from '../views/ProjectDetail.vue'
 import NotFound from '../views/NotFound.vue'
 import login from '../views/login.vue'
 import Features from '../views/Features.vue'
+import ChatRoom from '../views/ChatRoom.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -20,19 +21,27 @@ const router = createRouter({
       }
     },
     {
-          path: '/login',
-          name: 'login',
-          component: login,
-          meta: {
-            title: '登录'
-          }
-       },
+      path: '/login',
+      name: 'login',
+      component: login,
+      meta: {
+        title: '登录'
+      }
+    },
     {
       path: '/features',
       name: 'Features',
       component: Features,
       meta: {
         title: '功能中心'
+      }
+    },
+    {
+      path: '/features/chat',
+      name: 'ChatRoom',
+      component: ChatRoom,
+      meta: {
+        title: '聊天室'
       }
     },
     {

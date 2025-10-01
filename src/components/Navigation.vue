@@ -2,66 +2,6 @@
   <nav class="bg-white shadow-lg sticky top-0 z-50">
     <div class="container mx-auto px-4">
       <div class="flex justify-between items-center h-16">
-        <!-- Logo -->
-        <router-link
-          to="/"
-          class="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors"
-        >
-          Vue Router App
-        </router-link>
-
-        <!-- 桌面端导航 -->
-        <div class="hidden md:flex space-x-8">
-          <router-link
-            v-for="item in navigationItems"
-            :key="item.path"
-            :to="item.path"
-            class="nav-link"
-            :class="{ 'active': isActive(item.path) }"
-          >
-            {{ item.name }}
-          </router-link>
-        </div>
-
-        <!-- 移动端菜单按钮 -->
-        <button
-          @click="toggleMobileMenu"
-          class="md:hidden focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 rounded-lg"
-        >
-          <div class="w-6 h-6 flex flex-col justify-center items-center">
-            <span
-              class="bg-gray-600 block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm"
-              :class="{ 'rotate-45 translate-y-1': isMobileMenuOpen, 'mb-1': !isMobileMenuOpen }"
-            ></span>
-            <span
-              class="bg-gray-600 block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm"
-              :class="{ 'opacity-0': isMobileMenuOpen, 'mb-1': !isMobileMenuOpen }"
-            ></span>
-            <span
-              class="bg-gray-600 block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm"
-              :class="{ '-rotate-45 -translate-y-1': isMobileMenuOpen }"
-            ></span>
-          </div>
-        </button>
-      </div>
-
-      <!-- 移动端导航菜单 -->
-      <div
-        class="md:hidden transition-all duration-300 ease-in-out overflow-hidden"
-        :class="{ 'max-h-64 opacity-100': isMobileMenuOpen, 'max-h-0 opacity-0': !isMobileMenuOpen }"
-      >
-        <div class="py-4 space-y-2">
-          <router-link
-            v-for="item in navigationItems"
-            :key="item.path"
-            :to="item.path"
-            @click="closeMobileMenu"
-            class="mobile-nav-link"
-            :class="{ 'active-mobile': isActive(item.path) }"
-          >
-            {{ item.name }}
-          </router-link>
-        </div>
       </div>
     </div>
   </nav>

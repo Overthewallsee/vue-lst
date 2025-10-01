@@ -1,79 +1,100 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-16">
-    <div class="container mx-auto px-4">
-      <div class="max-w-4xl mx-auto">
-        <button
-          @click="goBack"
-          class="mb-8 flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+  <div class="project-detail-page">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <button 
+        @click="goBack"
+        class="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        返回项目列表
+      </button>
+
+      <div v-if="project" class="project-detail-card">
+        <img 
+          v-if="project.image" 
+          :src="project.image" 
+          :alt="project.title"
+          class="w-full h-64 object-cover"
         >
-          <span class="text-xl">←</span>
-          <span>返回项目列表</span>
-        </button>
-
-        <div v-if="project" class="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div class="aspect-video bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-            <span class="text-white text-8xl">{{ project.icon }}</span>
+        
+        <div class="p-8">
+          <div class="flex flex-wrap items-center gap-4 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">{{ project.title }}</h1>
+            <span 
+              class="px-3 py-1 rounded-full text-sm font-medium"
+              :class="getStatusClass(project.status)"
+            >
+              {{ project.status }}
+            </span>
           </div>
-
-          <div class="p-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ project.title }}</h1>
-            <p class="text-gray-600 text-lg mb-6 leading-relaxed">{{ project.description }}</p>
-
-            <div class="mb-8">
-              <h3 class="text-xl font-semibold text-gray-800 mb-4">技术栈</h3>
-              <div class="flex flex-wrap gap-3">
-                <span
-                  v-for="tech in project.technologies"
-                  :key="tech"
-                  class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium"
-                >
-                  {{ tech }}
-                </span>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">项目特性</h3>
-                <ul class="space-y-2">
-                  <li v-for="feature in project.features" :key="feature" class="flex items-center space-x-2">
-                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span class="text-gray-700">{{ feature }}</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">项目信息</h3>
-                <div class="space-y-3">
-                  <div class="flex justify-between">
-                    <span class="text-gray-600">状态:</span>
-                    <span class="text-green-600 font-medium">{{ project.status }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-gray-600">团队规模:</span>
-                    <span class="text-gray-800">{{ project.teamSize }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-gray-600">开发周期:</span>
-                    <span class="text-gray-800">{{ project.duration }}</span>
-                  </div>
+          
+          <p class="text-gray-600 text-lg mb-8 leading-relaxed">
+            {{ project.description }}
+          </p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-800 mb-4">项目详情</h2>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">开发周期</span>
+                  <span class="font-medium">{{ project.duration }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">技术栈</span>
+                  <span class="font-medium">{{ project.tech }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">团队规模</span>
+                  <span class="font-medium">{{ project.team }}</span>
                 </div>
               </div>
             </div>
+            
+            <div>
+              <h2 class="text-xl font-semibold text-gray-800 mb-4">主要功能</h2>
+              <ul class="space-y-2">
+                <li 
+                  v-for="feature in project.features" 
+                  :key="feature"
+                  class="flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  {{ feature }}
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-4">
+            <button 
+              v-if="project.liveUrl"
+              class="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              查看演示
+            </button>
+            <button 
+              v-if="project.githubUrl"
+              class="px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-900 transition-colors"
+            >
+              GitHub 源码
+            </button>
           </div>
         </div>
-
-        <div v-else class="text-center py-16">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4">项目未找到</h2>
-          <p class="text-gray-600 mb-8">抱歉，您查找的项目不存在。</p>
-          <router-link
-            to="/projects"
-            class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            返回项目列表
-          </router-link>
-        </div>
+      </div>
+      
+      <div v-else class="text-center py-12">
+        <div class="text-gray-400 mb-4">项目未找到</div>
+        <button 
+          @click="goBack"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          返回项目列表
+        </button>
       </div>
     </div>
   </div>
@@ -172,8 +193,36 @@ const goBack = () => {
   router.push('/projects')
 }
 
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case '已完成':
+      return 'bg-green-100 text-green-800'
+    case '进行中':
+      return 'bg-yellow-100 text-yellow-800'
+    case '规划中':
+      return 'bg-gray-100 text-gray-800'
+    default:
+      return ''
+  }
+}
+
 onMounted(() => {
   const projectId = parseInt(route.params.id as string)
   project.value = projectsData.find(p => p.id === projectId) || null
 })
 </script>
+
+<style scoped>
+.project-detail-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
+  padding: 2rem 1rem;
+}
+
+.project-detail-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+</style>

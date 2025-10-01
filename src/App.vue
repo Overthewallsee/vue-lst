@@ -17,6 +17,10 @@ const isLoginPage = computed(() => route.path === '/login')
 </script>
 
 <style>
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   margin: 0;
   padding: 0;
@@ -51,11 +55,6 @@ body {
   opacity: 0;
   transform: translateY(-10px);
 }
-
-/* Tailwind CSS */
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
 
 /* 自定义滚动条 */
 ::-webkit-scrollbar {

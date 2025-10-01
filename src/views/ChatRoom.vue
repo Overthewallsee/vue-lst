@@ -1,11 +1,100 @@
 <template>
   <div class="chat-room">
-    <!-- 房间号输入模态框 -->
-    <div v-if="showRoomModal" class="modal-overlay">
+    <!-- 选择操作模态框 -->
+    <div v-if="showActionModal" class="modal-overlay">
+      <div class="room-modal">
+        <div class="modal-header">
+          <h2 class="modal-title">聊天室</h2>
+          <p class="modal-description">请选择您要进行的操作</p>
+        </div>
+        
+        <div class="modal-body">
+          <div class="action-buttons">
+            <button @click="handleCreateClick" class="action-button create-button">
+              <span class="button-icon">➕</span>
+              <span class="button-text">创建聊天室</span>
+            </button>
+            <button @click="handleJoinClick" class="action-button join-button">
+              <span class="button-icon">🚪</span>
+              <span class="button-text">加入聊天室</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 创建聊天室表单 -->
+    <div v-else-if="showCreateForm" class="modal-overlay">
+      <div class="room-modal">
+        <div class="modal-header">
+          <h2 class="modal-title">创建聊天室</h2>
+          <p class="modal-description">请输入聊天室信息</p>
+        </div>
+        
+        <div class="modal-body">
+          <div class="input-group">
+            <label for="create-room-id" class="input-label">房间号</label>
+            <input
+              id="create-room-id"
+              v-model="newRoomId"
+              type="text"
+              placeholder="请输入房间号"
+              class="room-input"
+              @keyup.enter="createRoom"
+            />
+            <div v-if="createRoomError" class="error-message">{{ createRoomError }}</div>
+          </div>
+          
+          <div class="input-group">
+            <label for="create-room-password" class="input-label">房间密码</label>
+            <input
+              id="create-room-password"
+              v-model="newRoomPassword"
+              type="password"
+              placeholder="请输入房间密码"
+              class="room-input"
+              @keyup.enter="createRoom"
+            />
+          </div>
+          
+          <div class="input-group">
+            <label for="confirm-password" class="input-label">确认密码</label>
+            <input
+              id="confirm-password"
+              v-model="confirmPassword"
+              type="password"
+              placeholder="请再次输入房间密码"
+              class="room-input"
+              @keyup.enter="createRoom"
+            />
+            <div v-if="createPasswordError" class="error-message">{{ createPasswordError }}</div>
+          </div>
+          
+          <div class="room-actions">
+            <button 
+              @click="createRoom"
+              :disabled="!newRoomId.trim() || !newRoomPassword.trim() || !confirmPassword.trim()"
+              class="join-button"
+            >
+              创建房间
+            </button>
+            <button 
+              @click="backToAction"
+              class="cancel-button"
+            >
+              返回
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 加入聊天室表单 -->
+    <div v-else-if="showJoinForm" class="modal-overlay">
       <div class="room-modal">
         <div class="modal-header">
           <h2 class="modal-title">加入聊天室</h2>
-          <p class="modal-description">请输入房间号进入聊天室</p>
+          <p class="modal-description">请输入房间号和密码进入聊天室</p>
         </div>
         
         <div class="modal-body">
@@ -22,19 +111,32 @@
             <div v-if="roomError" class="error-message">{{ roomError }}</div>
           </div>
           
+          <div class="input-group">
+            <label for="room-password" class="input-label">房间密码</label>
+            <input
+              id="room-password"
+              v-model="roomPassword"
+              type="password"
+              placeholder="请输入房间密码"
+              class="room-input"
+              @keyup.enter="joinRoom"
+            />
+            <div v-if="passwordError" class="error-message">{{ passwordError }}</div>
+          </div>
+          
           <div class="room-actions">
             <button 
               @click="joinRoom"
-              :disabled="!roomId.trim()"
+              :disabled="!roomId.trim() || !roomPassword.trim()"
               class="join-button"
             >
               进入房间
             </button>
             <button 
-              @click="goToFeatures"
+              @click="backToAction"
               class="cancel-button"
             >
-              取消
+              返回
             </button>
           </div>
         </div>
@@ -55,9 +157,14 @@
             </button>
             <h1 class="header-title">💬 聊天室 - {{ currentRoomId }}</h1>
           </div>
-          <div class="online-users">
-            <span class="online-indicator"></span>
-            <span class="online-count">{{ onlineUsers.length }} 人在线</span>
+          <div class="header-right">
+            <button @click="exitChatRoom" class="exit-button">
+              退出聊天室
+            </button>
+            <div class="online-users">
+              <span class="online-indicator"></span>
+              <span class="online-count">{{ onlineUsers.length }} 人在线</span>
+            </div>
           </div>
         </div>
       </header>
@@ -135,16 +242,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { getUserName } from '@/utils/user.js'
 
 const router = useRouter()
 
-// 房间号相关状态
-const showRoomModal = ref(true)
+// 页面状态控制
+const showActionModal = ref(true) // 显示选择操作界面
+const showCreateForm = ref(false) // 显示创建房间表单
+const showJoinForm = ref(false) // 显示加入房间表单
+
+// 创建房间相关状态
+const newRoomId = ref('')
+const newRoomPassword = ref('')
+const confirmPassword = ref('')
+const createRoomError = ref('')
+const createPasswordError = ref('')
+
+// 加入房间相关状态
 const roomId = ref('')
+const roomPassword = ref('')
 const roomError = ref('')
+const passwordError = ref('')
 const currentRoomId = ref('')
+
+// WebSocket连接
+const websocket = ref<WebSocket | null>(null)
+const heartbeatInterval = ref<number | null>(null)
 
 // 用户类型定义
 interface User {
@@ -166,47 +291,17 @@ interface Message {
 // 当前用户
 const currentUser = reactive<User>({
   id: 'user-' + Math.random().toString(36).substr(2, 9),
-  name: '你',
+  name: getUserName(), // 使用真实用户名
   color: getRandomColor()
 })
 
 // 在线用户列表
 const onlineUsers = ref<User[]>([
-  { id: 'user-1', name: 'Alice', color: '#FF6B6B' },
-  { id: 'user-2', name: 'Bob', color: '#4ECDC4' },
-  { id: 'user-3', name: 'Charlie', color: '#45B7D1' },
-  { id: 'user-4', name: 'Diana', color: '#96CEB4' },
-  { id: 'user-5', name: 'Eve', color: '#FFEAA7' },
   currentUser // 添加当前用户
 ])
 
 // 消息列表
-const messages = ref<Message[]>([
-  {
-    id: 'msg-1',
-    userId: 'user-1',
-    userName: 'Alice',
-    userColor: '#FF6B6B',
-    content: '大家好！欢迎来到聊天室！',
-    timestamp: new Date(Date.now() - 300000)
-  },
-  {
-    id: 'msg-2',
-    userId: 'user-2',
-    userName: 'Bob',
-    userColor: '#4ECDC4',
-    content: '这个聊天室界面设计得真不错！',
-    timestamp: new Date(Date.now() - 240000)
-  },
-  {
-    id: 'msg-3',
-    userId: 'user-3',
-    userName: 'Charlie',
-    userColor: '#45B7D1',
-    content: '是的，简洁又美观，使用起来很舒服',
-    timestamp: new Date(Date.now() - 180000)
-  }
-])
+const messages = ref<Message[]>([])
 
 // 新消息输入
 const newMessage = ref('')
@@ -214,25 +309,227 @@ const newMessage = ref('')
 // 消息容器引用
 const messagesContainer = ref<HTMLElement | null>(null)
 
+// 处理创建聊天室点击事件
+const handleCreateClick = () => {
+  showActionModal.value = false
+  showCreateForm.value = true
+  showJoinForm.value = false
+}
+
+// 处理加入聊天室点击事件
+const handleJoinClick = () => {
+  showActionModal.value = false
+  showCreateForm.value = false
+  showJoinForm.value = true
+}
+
+// 返回选择操作界面
+const backToAction = () => {
+  showCreateForm.value = false
+  showJoinForm.value = false
+  showActionModal.value = true
+  
+  // 清空表单数据
+  newRoomId.value = ''
+  newRoomPassword.value = ''
+  confirmPassword.value = ''
+  roomId.value = ''
+  roomPassword.value = ''
+  
+  // 清空错误信息
+  createRoomError.value = ''
+  createPasswordError.value = ''
+  roomError.value = ''
+  passwordError.value = ''
+}
+
+// 创建房间
+const createRoom = async () => {
+  // 重置错误信息
+  createRoomError.value = ''
+  createPasswordError.value = ''
+  
+  if (!newRoomId.value.trim()) {
+    createRoomError.value = '请输入房间号'
+    return
+  }
+  
+  if (!newRoomPassword.value.trim()) {
+    createPasswordError.value = '请输入房间密码'
+    return
+  }
+  
+  if (newRoomPassword.value !== confirmPassword.value) {
+    createPasswordError.value = '两次输入的密码不一致'
+    return
+  }
+  
+  // 简单验证房间号格式
+  if (newRoomId.value.length < 3) {
+    createRoomError.value = '房间号至少需要3个字符'
+    return
+  }
+  
+  // 简单验证密码格式
+  if (newRoomPassword.value.length < 4) {
+    createPasswordError.value = '房间密码至少需要4个字符'
+    return
+  }
+  
+  // 注释掉实际的后端请求，直接模拟成功
+  /*
+  try {
+    // 获取用户token
+    const token = localStorage.getItem('token')
+    
+    // 发送创建房间请求
+    const response = await fetch('/lst/api/chat/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        username: currentUser.name,
+        roomId: newRoomId.value,
+        password: newRoomPassword.value
+      })
+    })
+    
+    const data = await response.json()
+    
+    if (response.ok) {
+      // 创建成功，进入聊天室
+      currentRoomId.value = newRoomId.value
+      showCreateForm.value = false
+      
+      // 连接到WebSocket
+      connectWebSocket(newRoomId.value)
+    } else {
+      // 根据错误类型显示相应的错误信息
+      if (data.error === 'ROOM_EXISTS') {
+        createRoomError.value = '房间号已存在'
+      } else {
+        createRoomError.value = data.message || '创建房间失败'
+      }
+    }
+  } catch (error) {
+    console.error('创建房间请求失败:', error)
+    createRoomError.value = '网络错误，请稍后重试'
+  }
+  */
+  
+  // 默认模拟成功
+  currentRoomId.value = newRoomId.value
+  showCreateForm.value = false
+  connectWebSocket(newRoomId.value)
+}
+
 // 加入房间
-const joinRoom = () => {
+const joinRoom = async () => {
+  // 重置错误信息
+  roomError.value = ''
+  passwordError.value = ''
+  
   if (!roomId.value.trim()) {
     roomError.value = '请输入房间号'
     return
   }
   
-  // 简单验证房间号格式（这里可以添加更复杂的验证逻辑）
+  if (!roomPassword.value.trim()) {
+    passwordError.value = '请输入房间密码'
+    return
+  }
+  
+  // 简单验证房间号格式
   if (roomId.value.length < 3) {
     roomError.value = '房间号至少需要3个字符'
     return
   }
   
-  // 设置当前房间号
-  currentRoomId.value = roomId.value
-  showRoomModal.value = false
+  // 简单验证密码格式
+  if (roomPassword.value.length < 4) {
+    passwordError.value = '房间密码至少需要4个字符'
+    return
+  }
   
-  // 重置错误信息
-  roomError.value = ''
+  // 注释掉实际的后端请求，直接模拟成功
+  /*
+  try {
+    // 获取用户token
+    const token = localStorage.getItem('token')
+    
+    // 发送加入房间请求
+    const response = await fetch('/lst/api/chat/join', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        username: currentUser.name,
+        roomId: roomId.value,
+        password: roomPassword.value
+      })
+    })
+    
+    const data = await response.json()
+    
+    if (response.ok) {
+      // 设置当前房间号
+      currentRoomId.value = roomId.value
+      showJoinForm.value = false
+      
+      // 连接到WebSocket
+      connectWebSocket(roomId.value)
+    } else {
+      // 根据错误类型显示相应的错误信息
+      if (data.error === 'INVALID_PASSWORD') {
+        passwordError.value = '房间密码错误'
+      } else if (data.error === 'ROOM_NOT_FOUND') {
+        roomError.value = '房间不存在'
+      } else {
+        roomError.value = data.message || '加入房间失败'
+      }
+    }
+  } catch (error) {
+    console.error('加入房间请求失败:', error)
+    roomError.value = '网络错误，请稍后重试'
+  }
+  */
+  
+  // 默认模拟成功
+  currentRoomId.value = roomId.value
+  showJoinForm.value = false
+  connectWebSocket(roomId.value)
+}
+
+// 连接WebSocket
+const connectWebSocket = (roomId: string) => {
+  // 这里应该连接到真实的WebSocket服务器
+  // 为了演示，我们使用模拟的WebSocket连接
+  console.log(`连接到聊天室 ${roomId}`)
+  
+  // 清空消息列表
+  messages.value = []
+  
+  // 添加欢迎消息
+  setTimeout(() => {
+    messages.value.push({
+      id: 'welcome-' + Date.now(),
+      userId: 'system',
+      userName: '系统',
+      userColor: '#999999',
+      content: `欢迎加入聊天室 ${roomId}！`,
+      timestamp: new Date()
+    })
+  }, 500)
+  
+  // 启动心跳机制（模拟）
+  heartbeatInterval.value = window.setInterval(() => {
+    // 模拟心跳
+    console.log('心跳包发送...')
+  }, 30000)
 }
 
 // 发送消息
@@ -287,6 +584,35 @@ const goToFeatures = () => {
   router.push('/features')
 }
 
+// 退出聊天室
+const exitChatRoom = () => {
+  if (confirm('确定要退出当前聊天室吗？')) {
+    // 断开WebSocket连接
+    if (websocket.value) {
+      websocket.value.close()
+      websocket.value = null
+    }
+    
+    // 清除心跳定时器
+    if (heartbeatInterval.value) {
+      clearInterval(heartbeatInterval.value)
+      heartbeatInterval.value = null
+    }
+    
+    // 重置聊天室状态
+    currentRoomId.value = ''
+    showActionModal.value = true
+    messages.value = []
+  }
+}
+
+// 组件卸载前清理资源
+onBeforeUnmount(() => {
+  if (heartbeatInterval.value) {
+    clearInterval(heartbeatInterval.value)
+  }
+})
+
 // 组件挂载时滚动到底部
 onMounted(() => {
   scrollToBottom()
@@ -316,6 +642,7 @@ onMounted(() => {
   z-index: 1000;
   padding: 1rem;
   backdrop-filter: blur(5px);
+  overflow-y: auto; /* 添加垂直滚动条 */
 }
 
 .room-modal {
@@ -325,6 +652,7 @@ onMounted(() => {
   max-width: 400px;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
   animation: modalSlideIn 0.4s ease-out;
+  margin: auto; /* 确保在小屏幕上居中 */
 }
 
 @keyframes modalSlideIn {
@@ -360,6 +688,47 @@ onMounted(() => {
   padding: 1rem 2rem 2rem;
 }
 
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem;
+  border-radius: 16px;
+  border: 2px solid #e1e5e9;
+  background: #f8f9fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.create-button:hover {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+}
+
+.join-button:hover {
+  border-color: #45B7D1;
+  background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+}
+
+.button-icon {
+  font-size: 1.5rem;
+}
+
+/* 输入组 */
 .input-group {
   margin-bottom: 1.5rem;
 }
@@ -412,13 +781,14 @@ onMounted(() => {
 
 .join-button {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: black; /* 将字体颜色改为黑色 */
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 .join-button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6);
+  color: black; /* 悬停时保持黑色字体 */
 }
 
 .join-button:disabled {
@@ -462,6 +832,12 @@ onMounted(() => {
   gap: 1rem;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .back-button {
   background: rgba(102, 126, 234, 0.1);
   border: none;
@@ -479,6 +855,22 @@ onMounted(() => {
 .back-button:hover {
   background: rgba(102, 126, 234, 0.2);
   transform: translateX(-2px);
+}
+
+.exit-button {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.exit-button:hover {
+  background: #ff5252;
+  transform: translateY(-2px);
 }
 
 .header-title {
@@ -514,9 +906,9 @@ onMounted(() => {
 .chat-container {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 1.5rem auto 0; /* 添加顶部边距 */
   width: 100%;
   padding: 0 1rem;
   gap: 1rem;
@@ -743,7 +1135,7 @@ onMounted(() => {
     text-align: center;
   }
   
-  .header-left {
+  .header-left, .header-right {
     width: 100%;
     justify-content: space-between;
   }
@@ -754,6 +1146,15 @@ onMounted(() => {
   
   .room-modal {
     margin: 1rem;
+  }
+  
+  .action-buttons {
+    gap: 0.8rem;
+  }
+  
+  .action-button {
+    padding: 1rem;
+    font-size: 1rem;
   }
 }
 
@@ -784,6 +1185,11 @@ onMounted(() => {
   
   .room-actions {
     flex-direction: column;
+  }
+  
+  .exit-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-opacity-90">
+  <nav class="navigation-bar">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div style="display: flex; justify-content: space-between; align-items: center; height: 4rem;">
         <!-- 左上角 Logo -->
@@ -20,8 +20,10 @@
             @click="logout"
             class="logout-button"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <!-- "->" 样式的退出登录图标 -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="logout-icon">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
           </button>
         </div>
@@ -31,26 +33,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getUserName, clearUserInfo } from '@/utils/user.js'
 
-// 模拟当前用户，实际项目中应该从 store 或 API 获取
-const currentUser = ref('用户123')
+// 当前用户，从 localStorage 获取真实用户名
+const currentUser = ref('')
 
 const router = useRouter()
 
 // 退出登录功能
 const logout = () => {
   if (confirm('确定要退出登录吗？')) {
-    // 清除用户认证信息（示例）
-    // localStorage.removeItem('token')
+    // 清除用户认证信息
+    clearUserInfo()
     // 跳转到登录页
     router.push('/login')
   }
 }
+
+// 组件挂载时获取用户名
+onMounted(() => {
+  currentUser.value = getUserName()
+})
 </script>
 
 <style scoped>
+.navigation-bar {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
 .logo-container {
   margin: 12px 0 12px 12px;
 }

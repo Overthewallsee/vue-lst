@@ -4,6 +4,14 @@
     <div v-if="showActionModal" class="modal-overlay">
       <div class="room-modal">
         <div class="modal-header">
+          <div class="modal-header-top">
+            <button @click="goToFeatures" class="modal-back-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+            </button>
+          </div>
           <h2 class="modal-title">聊天室</h2>
           <p class="modal-description">请选择您要进行的操作</p>
         </div>
@@ -27,6 +35,14 @@
     <div v-else-if="showCreateForm" class="modal-overlay">
       <div class="room-modal">
         <div class="modal-header">
+          <div class="modal-header-top">
+            <button @click="goToFeatures" class="modal-back-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+            </button>
+          </div>
           <h2 class="modal-title">创建聊天室</h2>
           <p class="modal-description">请输入聊天室信息</p>
         </div>
@@ -93,6 +109,14 @@
     <div v-else-if="showJoinForm" class="modal-overlay">
       <div class="room-modal">
         <div class="modal-header">
+          <div class="modal-header-top">
+            <button @click="goToFeatures" class="modal-back-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+            </button>
+          </div>
           <h2 class="modal-title">加入聊天室</h2>
           <p class="modal-description">请输入房间号和密码进入聊天室</p>
         </div>
@@ -179,13 +203,13 @@
               v-for="user in onlineUsers" 
               :key="user.id"
               class="user-item"
-              :class="{ 'current-user': user.id === currentUser.id }"
+              :class="{ 'current-user': user.name === currentUser.name }"
             >
               <div class="user-avatar" :style="{ backgroundColor: user.color }">
                 {{ user.name.charAt(0).toUpperCase() }}
               </div>
               <span class="user-name">{{ user.name }}</span>
-              <span v-if="user.id === currentUser.id" class="you-tag">你</span>
+              <span v-if="user.name === currentUser.name" class="you-tag">你</span>
             </li>
           </ul>
         </aside>
@@ -198,7 +222,7 @@
               v-for="message in messages" 
               :key="message.id"
               class="message"
-              :class="{ 'own-message': message.userId === currentUser.id }"
+              :class="{ 'own-message': message.name === currentUser.name }"
             >
               <div class="message-header">
                 <div class="user-info">
@@ -245,6 +269,7 @@
 import { ref, reactive, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { getUserName } from '@/utils/user.js'
+import { WS_BASE_URL } from '@/api/config.js'
 
 const router = useRouter()
 
@@ -376,8 +401,6 @@ const createRoom = async () => {
     return
   }
   
-  // 注释掉实际的后端请求，直接模拟成功
-  /*
   try {
     // 获取用户token
     const token = localStorage.getItem('token')
@@ -402,6 +425,9 @@ const createRoom = async () => {
       // 创建成功，进入聊天室
       currentRoomId.value = newRoomId.value
       showCreateForm.value = false
+      // this.onlineUsers.value = data.nameList;
+      //this.$set(this.onlineUsers, 'value', data.nameList);
+      handleUserListUpdate(data.nameList);
       
       // 连接到WebSocket
       connectWebSocket(newRoomId.value)
@@ -417,12 +443,6 @@ const createRoom = async () => {
     console.error('创建房间请求失败:', error)
     createRoomError.value = '网络错误，请稍后重试'
   }
-  */
-  
-  // 默认模拟成功
-  currentRoomId.value = newRoomId.value
-  showCreateForm.value = false
-  connectWebSocket(newRoomId.value)
 }
 
 // 加入房间
@@ -453,8 +473,6 @@ const joinRoom = async () => {
     return
   }
   
-  // 注释掉实际的后端请求，直接模拟成功
-  /*
   try {
     // 获取用户token
     const token = localStorage.getItem('token')
@@ -479,7 +497,9 @@ const joinRoom = async () => {
       // 设置当前房间号
       currentRoomId.value = roomId.value
       showJoinForm.value = false
-      
+      // this.onlineUsers.value = data.nameList;
+      //this.$set(this.onlineUsers, 'value', data.nameList);
+      handleUserListUpdate(data.nameList);
       // 连接到WebSocket
       connectWebSocket(roomId.value)
     } else {
@@ -496,60 +516,193 @@ const joinRoom = async () => {
     console.error('加入房间请求失败:', error)
     roomError.value = '网络错误，请稍后重试'
   }
-  */
-  
-  // 默认模拟成功
-  currentRoomId.value = roomId.value
-  showJoinForm.value = false
-  connectWebSocket(roomId.value)
 }
 
 // 连接WebSocket
 const connectWebSocket = (roomId: string) => {
-  // 这里应该连接到真实的WebSocket服务器
-  // 为了演示，我们使用模拟的WebSocket连接
-  console.log(`连接到聊天室 ${roomId}`)
+  // 关闭现有的WebSocket连接（如果有的话）
+  if (websocket.value) {
+    websocket.value.close()
+  }
+  
+  // 创建新的WebSocket连接
+  // 使用配置文件中的WebSocket基础URL
+  const token = localStorage.getItem('token')
+  const wsUrl = `${WS_BASE_URL}/lst/ws/chat/${roomId}?token=${token}`
+  
+  websocket.value = new WebSocket(wsUrl)
   
   // 清空消息列表
   messages.value = []
   
-  // 添加欢迎消息
-  setTimeout(() => {
-    messages.value.push({
-      id: 'welcome-' + Date.now(),
+  // 设置WebSocket事件处理
+  websocket.value.onopen = () => {
+    console.log('WebSocket连接已建立')
+    
+    // 发送用户加入消息
+    const joinMessage = {
+      type: 'join',
+      user: {
+        id: currentUser.id,
+        name: currentUser.name,
+        color: currentUser.color
+      }
+    }
+    
+    websocket.value?.send(JSON.stringify(joinMessage))
+    
+    // 启动心跳机制
+    startHeartbeat()
+  }
+  
+  websocket.value.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)
+      handleWebSocketMessage(data)
+    } catch (error) {
+      console.error('解析WebSocket消息失败:', error)
+    }
+  }
+  
+  websocket.value.onclose = () => {
+    console.log('WebSocket连接已关闭')
+    stopHeartbeat()
+  }
+  
+  websocket.value.onerror = (error) => {
+    console.error('WebSocket连接错误:', error)
+    stopHeartbeat()
+  }
+}
+
+// 处理WebSocket消息
+const handleWebSocketMessage = (data: any) => {
+  switch (data.type) {
+    case 'join':
+      // 新用户加入
+      handleUserJoined(data.user)
+      break
+      
+    case 'user_left':
+      // 用户离开
+      handleUserLeft(data.userId)
+      break
+      
+    case 'chat_message':
+      // 聊天消息
+      handleChatMessage(data.message)
+      break
+      
+    case 'user_list':
+      // 用户列表更新
+      handleUserListUpdate(data.users)
+      break
+      
+    default:
+      console.log('未知消息类型:', data.type)
+  }
+}
+
+// 处理新用户加入
+const handleUserJoined = (user: User) => {
+  // 检查用户是否已存在
+  const userExists = onlineUsers.value.some(u => u.id === user.id)
+  
+  if (!userExists) {
+    onlineUsers.value.push(user)
+  }
+  
+  // 添加系统消息
+  const message: Message = {
+    id: 'msg-' + Date.now(),
+    userId: 'system',
+    userName: '系统',
+    userColor: '#999999',
+    content: `${user.name} 加入了聊天室`,
+    timestamp: new Date()
+  }
+  
+  messages.value.push(message)
+  scrollToBottom()
+}
+
+// 处理用户离开
+const handleUserLeft = (userId: string) => {
+  // 从在线用户列表中移除该用户
+  const userIndex = onlineUsers.value.findIndex(u => u.id === userId)
+  if (userIndex !== -1) {
+    const user = onlineUsers.value[userIndex]
+    onlineUsers.value.splice(userIndex, 1)
+    
+    // 添加系统消息
+    const message: Message = {
+      id: 'msg-' + Date.now(),
       userId: 'system',
       userName: '系统',
       userColor: '#999999',
-      content: `欢迎加入聊天室 ${roomId}！`,
+      content: `${user.name} 离开了聊天室`,
       timestamp: new Date()
-    })
-  }, 500)
+    }
+    
+    messages.value.push(message)
+    scrollToBottom()
+  }
+}
+
+// 处理聊天消息
+const handleChatMessage = (messageData: any) => {
+  const message: Message = {
+    id: messageData.id,
+    userId: messageData.userId,
+    userName: messageData.userName,
+    userColor: messageData.userColor,
+    content: messageData.content,
+    timestamp: new Date(messageData.timestamp)
+  }
   
-  // 启动心跳机制（模拟）
+  messages.value.push(message)
+  scrollToBottom()
+}
+
+// 处理用户列表更新
+const handleUserListUpdate = (users: User[]) => {
+  onlineUsers.value = users
+}
+
+// 启动心跳机制
+const startHeartbeat = () => {
+  stopHeartbeat() // 先清除现有的心跳定时器
+  
   heartbeatInterval.value = window.setInterval(() => {
-    // 模拟心跳
-    console.log('心跳包发送...')
-  }, 30000)
+    if (websocket.value && websocket.value.readyState === WebSocket.OPEN) {
+      websocket.value.send(JSON.stringify({ type: 'heartbeat' }))
+    }
+  }, 30000) // 每30秒发送一次心跳
+}
+
+// 停止心跳机制
+const stopHeartbeat = () => {
+  if (heartbeatInterval.value) {
+    clearInterval(heartbeatInterval.value)
+    heartbeatInterval.value = null
+  }
 }
 
 // 发送消息
 const sendMessage = () => {
-  if (!newMessage.value.trim()) return
-
-  const message: Message = {
-    id: 'msg-' + Date.now(),
-    userId: currentUser.id,
-    userName: currentUser.name,
-    userColor: currentUser.color,
-    content: newMessage.value,
-    timestamp: new Date()
+  if (!newMessage.value.trim() || !websocket.value || websocket.value.readyState !== WebSocket.OPEN) {
+    return
   }
 
-  messages.value.push(message)
+  const messageData = {
+    type: 'chat_message',
+    message: {
+      content: newMessage.value.trim()
+    }
+  }
+
+  websocket.value.send(JSON.stringify(messageData))
   newMessage.value = ''
-  
-  // 滚动到最新消息
-  scrollToBottom()
 }
 
 // 格式化时间
@@ -589,43 +742,64 @@ const exitChatRoom = () => {
   if (confirm('确定要退出当前聊天室吗？')) {
     // 断开WebSocket连接
     if (websocket.value) {
+      // 发送离开消息
+      if (websocket.value.readyState === WebSocket.OPEN) {
+        const leaveMessage = {
+          type: 'leave',
+          userId: currentUser.id
+        }
+        websocket.value.send(JSON.stringify(leaveMessage))
+      }
+      
       websocket.value.close()
       websocket.value = null
     }
     
     // 清除心跳定时器
-    if (heartbeatInterval.value) {
-      clearInterval(heartbeatInterval.value)
-      heartbeatInterval.value = null
-    }
+    stopHeartbeat()
     
     // 重置聊天室状态
     currentRoomId.value = ''
     showActionModal.value = true
     messages.value = []
+    onlineUsers.value = [currentUser]
   }
 }
 
 // 组件卸载前清理资源
 onBeforeUnmount(() => {
-  if (heartbeatInterval.value) {
-    clearInterval(heartbeatInterval.value)
+  // 断开WebSocket连接
+  if (websocket.value) {
+    websocket.value.close()
+    websocket.value = null
   }
+  
+  // 清除心跳定时器
+  stopHeartbeat()
+  
+  // 移除 resize 事件监听器
+  window.removeEventListener('resize', scrollToBottom)
 })
 
 // 组件挂载时滚动到底部
 onMounted(() => {
   scrollToBottom()
+  
+  // 添加 resize 事件监听器以处理窗口大小变化
+  window.addEventListener('resize', scrollToBottom)
 })
+
 </script>
 
 <style scoped>
 .chat-room {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding-bottom: 1rem; /* 在整个聊天室容器中添加底部内边距 */
+  box-sizing: border-box; /* 确保padding不会增加总高度 */
 }
 
 /* 房间号模态框 */
@@ -653,6 +827,7 @@ onMounted(() => {
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
   animation: modalSlideIn 0.4s ease-out;
   margin: auto; /* 确保在小屏幕上居中 */
+  padding: 1.5rem;
 }
 
 @keyframes modalSlideIn {
@@ -667,8 +842,16 @@ onMounted(() => {
 }
 
 .modal-header {
-  padding: 2rem 2rem 1rem;
+  padding: 1rem 2rem 1rem;
   text-align: center;
+  position: relative;
+}
+
+.modal-header-top {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
 }
 
 .modal-title {
@@ -684,8 +867,24 @@ onMounted(() => {
   font-size: 1rem;
 }
 
-.modal-body {
-  padding: 1rem 2rem 2rem;
+.modal-back-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.modal-back-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 /* 操作按钮 */
@@ -808,6 +1007,11 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
+/* 模态框主体 */
+.modal-body {
+  padding: 1rem 0 2rem;
+}
+
 /* 页面头部 */
 .chat-header {
   background: rgba(255, 255, 255, 0.95);
@@ -815,6 +1019,7 @@ onMounted(() => {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   padding: 1rem 2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0; /* 防止头部在空间不足时被压缩 */
 }
 
 .header-content {
@@ -906,12 +1111,13 @@ onMounted(() => {
 .chat-container {
   display: flex;
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   max-width: 1200px;
-  margin: 1.5rem auto 0; /* 添加顶部边距 */
+  margin: 1.5rem auto 0;
   width: 100%;
   padding: 0 1rem;
   gap: 1rem;
+  box-sizing: border-box;
 }
 
 /* 用户面板 */
@@ -924,6 +1130,8 @@ onMounted(() => {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   overflow-y: auto;
+  height: calc(100vh - 150px);
+  min-height: 400px; /* 添加最小高度确保可读性 */
 }
 
 .panel-title {
@@ -1003,16 +1211,29 @@ onMounted(() => {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   overflow: hidden;
+  margin-bottom: 1.5rem;
+  height: calc(100vh - 150px);
+  min-height: 400px; /* 设置最小高度确保可读性 */
 }
 
 /* 消息容器 */
 .messages-container {
   flex: 1;
   padding: 1.5rem;
-  overflow-y: auto;
+  padding-bottom: 0.5rem; /* 减少底部内边距 */
+  overflow-y: auto; /* 确保纵向滚动条 */
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+  scroll-behavior: smooth; /* 平滑滚动 */
+  max-height: calc(100vh - 300px); /* 限制最大高度，确保滚动条正确显示 */
+}
+
+.messages-container::after {
+  content: "";
+  display: block;
+  height: 1rem; /* 添加底部空间 */
+  flex-shrink: 0;
 }
 
 .message {
@@ -1024,6 +1245,7 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   border: 1px solid rgba(0, 0, 0, 0.03);
   animation: fadeIn 0.3s ease;
+  margin-bottom: 0.5rem; /* 添加消息之间的底部边距 */
 }
 
 .message.own-message {
@@ -1071,6 +1293,8 @@ onMounted(() => {
   padding: 1.5rem;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   background: rgba(255, 255, 255, 0.9);
+  margin-top: auto; /* 确保输入区域始终在底部 */
+  flex-shrink: 0; /* 防止输入区域在空间不足时被压缩 */
 }
 
 .input-container {

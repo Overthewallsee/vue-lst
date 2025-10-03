@@ -1,5 +1,17 @@
-# Vue 3 + Vite
+# Vue Login Project
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+这是一个基于Vue 3的登录项目。
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## 环境配置
+
+项目支持通过环境变量配置API和WebSocket连接地址：
+
+- `VITE_API_BASE_URL`: API基础URL
+- `VITE_WS_BASE_URL`: WebSocket基础URL（可选，如果不配置会基于API_BASE_URL自动生成）
+
+可以创建以下环境配置文件：
+- `.env`: 默认环境配置
+- `.env.development`: 开发环境配置
+- `.env.production`: 生产环境配置
+
+参考 `.env.example` 文件创建相应的环境配置文件。

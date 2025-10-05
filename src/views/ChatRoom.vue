@@ -222,19 +222,39 @@
               v-for="message in messages" 
               :key="message.id"
               class="message"
-              :class="{ 'own-message': message.name === currentUser.name }"
+              :class="{ 
+                'own-message': message.name === currentUser.name,
+                'system-message': message.userId === 'system'
+              }"
             >
               <div class="message-header">
-                <div class="user-info">
-                  <div class="user-avatar small" :style="{ backgroundColor: message.userColor }">
-                    {{ (message.name ? message.name.charAt(0) : '').toUpperCase() }}
-                  </div>
-                  <span class="user-name">{{ message.name }}</span>
-                </div>
                 <span class="message-time">{{ formatTime(message.timestamp) }}</span>
               </div>
-              <div class="message-content">
+              <!-- 自己发送的消息 -->
+              <div v-if="message.name === currentUser.name" class="message-row own-message-row">
+                <div class="message-content">
+                  {{ message.content }}
+                </div>
+                <div class="user-info">
+                  <div class="user-avatar small" :style="{ backgroundColor: message.userColor }">
+                    <span class="user-name">{{ message.name }}</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 系统消息 -->
+              <div v-else-if="message.userId === 'system'" class="message-content">
                 {{ message.content }}
+              </div>
+              <!-- 其他人发送的消息 -->
+              <div v-else class="message-row other-message-row">
+                <div class="user-info">
+                  <div class="user-avatar small" :style="{ backgroundColor: message.userColor }">
+                    <span class="user-name">{{ message.name }}</span>
+                  </div>
+                </div>
+                <div class="message-content">
+                  {{ message.content }}
+                </div>
               </div>
             </div>
           </div>
@@ -588,7 +608,7 @@ const handleWebSocketMessage = (data: any) => {
       
     case 'leave':
       // 用户离开
-      handleUserLeft(data.userId)
+      handleUserLeft(data.username)
       break
       
     case 'chat':
@@ -630,9 +650,9 @@ const handleUserJoined = (user: User) => {
 }
 
 // 处理用户离开
-const handleUserLeft = (userId: string) => {
+const handleUserLeft = (username: string) => {
   // 从在线用户列表中移除该用户
-  const userIndex = onlineUsers.value.findIndex(u => u.id === userId)
+  const userIndex = onlineUsers.value.findIndex(u => u.name === username)
   if (userIndex !== -1) {
     const user = onlineUsers.value[userIndex]
     onlineUsers.value.splice(userIndex, 1)
@@ -1183,16 +1203,12 @@ onMounted(() => {
   margin-right: 0.75rem;
 }
 
-.user-avatar.small {
-  width: 28px;
-  height: 28px;
-  font-size: 0.8rem;
-}
-
 .user-name {
-  flex: 1;
-  font-weight: 500;
-  color: #333;
+  display: block;
+  font-size: 0.7rem;
+  margin-top: 2px;
+  white-space: nowrap;
+  color: black; /* 设置用户名颜色为黑色 */
 }
 
 .you-tag {
@@ -1215,81 +1231,107 @@ onMounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.5);
   overflow: hidden;
   margin-bottom: 1.5rem;
-  min-height: calc(100vh - 150px); /* 使用min-height替代height */
+  min-height: 400px; /* 与 users-panel 保持一致 */
   max-height: calc(100vh - 150px); /* 添加max-height确保不会超出 */
 }
 
 /* 消息容器 */
 .messages-container {
   flex: 1;
-  padding: 1.5rem;
-  padding-bottom: 0.5rem; /* 减少底部内边距 */
-  overflow-y: auto; /* 确保纵向滚动条 */
+  padding: 1rem;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
-  scroll-behavior: smooth; /* 平滑滚动 */
-  min-height: 0; /* 允许容器收缩以适应内容 */
-}
-
-.messages-container::after {
-  content: "";
-  display: block;
-  height: 1rem; /* 添加底部空间 */
-  flex-shrink: 0;
+  gap: 0.5rem; /* 减少消息间距 */
+  scroll-behavior: smooth;
+  min-height: 0;
 }
 
 .message {
   background: rgba(248, 249, 250, 0.8);
-  border-radius: 18px;
-  padding: 1rem 1.2rem;
-  max-width: 80%;
+  border-radius: 12px;
+  padding: 0.6rem 0.8rem;
+  max-width: 85%;
   align-self: flex-start;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
   border: 1px solid rgba(0, 0, 0, 0.03);
-  animation: fadeIn 0.3s ease;
-  margin-bottom: 0.5rem; /* 添加消息之间的底部边距 */
+  animation: fadeIn 0.2s ease;
+  margin-bottom: 0.3rem;
+  color: black; /* 设置默认文字颜色为黑色 */
+}
+
+.message.system-message {
+  align-self: center;
+  background: rgba(153, 153, 153, 0.1);
+  text-align: center;
+  max-width: fit-content;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
 }
 
 .message.own-message {
   align-self: flex-end;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: white; /* 自己发送的消息使用白色文字 */
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.message.own-message .message-time {
+  color: white; /* 自己发送的消息中的时间使用白色 */
+}
+
+.message.own-message .user-name {
+  color: white; /* 自己发送的消息中的用户名使用白色 */
 }
 
 .message-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
+  justify-content: flex-end;
+  margin-bottom: 0.2rem;
+}
+
+.message-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.own-message-row {
+  flex-direction: row-reverse; /* 自己发送的消息，用户信息在右侧 */
+}
+
+.other-message-row {
+  flex-direction: row; /* 其他人发送的消息，用户信息在左侧 */
+}
+
+.message-content {
+  flex: 1;
+  line-height: 1.4;
+  word-wrap: break-word;
+  font-size: 0.9rem;
+  color: black; /* 将聊天内容文字颜色改为黑色 */
 }
 
 .user-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  min-width: fit-content;
 }
 
 .message-time {
-  font-size: 0.75rem;
-  opacity: 0.8;
+  font-size: 0.65rem;
+  opacity: 0.7;
+  color: black; /* 设置时间颜色为黑色 */
 }
 
-.message-content {
-  line-height: 1.5;
-  word-wrap: break-word;
+.user-avatar.small {
+  width: 24px;
+  height: 24px;
+  font-size: 0.7rem;
+  min-width: 24px;
 }
+
+/* 删除不再使用的旧类 */
 
 /* 输入区域 */
 .input-area {

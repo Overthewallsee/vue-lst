@@ -141,10 +141,8 @@ async function onSubmit(e) {
     // 加密密码
     const encryptedPassword = encryptPassword(form.value.password)
 
-    // 使用 API_BASE_URL 构建完整 URL
-    const baseUrl = API_BASE_URL || ''
+    // 使用相对路径，通过Vite代理转发请求
     const endpoint = isLogin.value ? '/lst/api/auth/login' : '/lst/api/auth/register'
-    const url = `${baseUrl}${endpoint}`
     
     const requestBody = {
       phoneNumber: form.value.phoneNumber, // 将发送给后端的字段改为 phoneNumber
@@ -157,7 +155,7 @@ async function onSubmit(e) {
       requestBody.remember = form.value.remember
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -10,7 +10,7 @@ export default defineConfig({
       '@': resolve(__dirname, 'src')
     }
   },
-  server: {
+  server: {  // 用与vite代理访问后台解决跨域问题
     proxy: {
       '/lst/api': {
         target: 'http://127.0.0.1:8899',

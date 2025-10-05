@@ -206,7 +206,7 @@
               :class="{ 'current-user': user.name === currentUser.name }"
             >
               <div class="user-avatar" :style="{ backgroundColor: user.color }">
-                {{ (user.name ? user.name.charAt(0) : '').toUpperCase() }}
+                <span>{{ (user.name ? user.name.charAt(0) : '').toUpperCase() }}</span>
               </div>
               <span class="user-name">{{ user.name }}</span>
               <span v-if="user.name === currentUser.name" class="you-tag">你</span>
@@ -227,18 +227,19 @@
                 'system-message': message.userId === 'system'
               }"
             >
-              <div class="message-header">
-                <span class="message-time">{{ formatTime(message.timestamp) }}</span>
-              </div>
               <!-- 自己发送的消息 -->
               <div v-if="message.name === currentUser.name" class="message-row own-message-row">
-                <div class="message-content">
-                  {{ message.content }}
-                </div>
                 <div class="user-info">
+                  <span class="user-name">{{ message.name }}</span>
                   <div class="user-avatar small" :style="{ backgroundColor: message.userColor }">
-                    <span class="user-name">{{ message.name }}</span>
+                    <span>{{ (message.name ? message.name.charAt(0) : '').toUpperCase() }}</span>
                   </div>
+                </div>
+                <div class="message-content">
+                  <div class="message-meta">
+                    <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+                  </div>
+                  {{ message.content }}
                 </div>
               </div>
               <!-- 系统消息 -->
@@ -248,11 +249,15 @@
               <!-- 其他人发送的消息 -->
               <div v-else class="message-row other-message-row">
                 <div class="user-info">
+                  <span class="user-name">{{ message.name }}</span>
                   <div class="user-avatar small" :style="{ backgroundColor: message.userColor }">
-                    <span class="user-name">{{ message.name }}</span>
+                    <span>{{ (message.name ? message.name.charAt(0) : '').toUpperCase() }}</span>
                   </div>
                 </div>
                 <div class="message-content">
+                  <div class="message-meta">
+                    <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+                  </div>
                   {{ message.content }}
                 </div>
               </div>
@@ -333,11 +338,23 @@ interface Message {
   timestamp: Date
 }
 
+// 获取更鲜艳的颜色
+function getVibrantColor() {
+  const vibrantColors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+    '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+    '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA',
+    '#FF7675', '#74B9FF', '#00B894', '#FDCB6E',
+    '#E17055', '#00CEC9', '#F660AB', '#30336B'
+  ]
+  return vibrantColors[Math.floor(Math.random() * vibrantColors.length)]
+}
+
 // 当前用户
 const currentUser = reactive<User>({
   id: 'user-' + Math.random().toString(36).substr(2, 9),
   name: getUserName(), // 使用真实用户名
-  color: getRandomColor()
+  color: getVibrantColor()
 })
 
 // 在线用户列表
@@ -632,7 +649,12 @@ const handleUserJoined = (user: User) => {
   const userExists = onlineUsers.value.some(u => u.name === user.name)
   
   if (!userExists) {
-      onlineUsers.value.push(user); // 直接添加元素，Vue 3会自动处理响应性
+    // 如果新用户没有颜色，则分配一个鲜艳的颜色
+    const userWithColor = {
+      ...user,
+      color: user.color || getVibrantColor()
+    };
+    onlineUsers.value.push(userWithColor); // 直接添加元素，Vue 3会自动处理响应性
   }
   
   // 添加系统消息
@@ -1145,26 +1167,28 @@ onMounted(() => {
 
 /* 用户面板 */
 .users-panel {
-  width: 250px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+  width: 260px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 1.75rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   overflow-y: auto;
   height: calc(100vh - 150px);
-  min-height: 400px; /* 添加最小高度确保可读性 */
+  min-height: 400px;
 }
 
 .panel-title {
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
   color: #333;
   margin-top: 0;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  text-align: center;
+  letter-spacing: 0.5px;
 }
 
 .users-list {
@@ -1176,47 +1200,115 @@ onMounted(() => {
 .user-item {
   display: flex;
   align-items: center;
-  padding: 0.75rem;
-  border-radius: 12px;
-  margin-bottom: 0.5rem;
-  transition: background-color 0.2s ease;
+  padding: 0.9rem 1.2rem;
+  border-radius: 14px;
+  margin-bottom: 0.8rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .user-item:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .user-item.current-user {
-  background: rgba(102, 126, 234, 0.1);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.user-item.current-user:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 1rem;
-  margin-right: 0.75rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-right: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.15), 
+              inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  position: relative;
+  overflow: hidden;
+  transform: scale(1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background-blend-mode: overlay;
+  text-align: center;
+}
+
+.user-avatar::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+  transform: rotate(30deg);
+  z-index: 1;
+}
+
+.user-avatar:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.18),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.user-item.current-user .user-avatar {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.9), 0 4px 12px rgba(0, 0, 0, 0.2),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.user-item.current-user .user-avatar:hover {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 1), 0 8px 20px rgba(0, 0, 0, 0.25),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.user-avatar.small {
+  width: 24px;
+  height: 24px;
+  font-size: 0.7rem;
+  min-width: 24px;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7), 0 0.5px 1px rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .user-name {
   display: block;
-  font-size: 0.7rem;
-  margin-top: 2px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
   white-space: nowrap;
-  color: black; /* 设置用户名颜色为黑色 */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .you-tag {
-  background: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
 }
 
 /* 聊天主区域 */
@@ -1269,6 +1361,10 @@ onMounted(() => {
   border-radius: 20px;
 }
 
+.message-header {
+  display: none;
+}
+
 .message.own-message {
   align-self: flex-end;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1299,6 +1395,10 @@ onMounted(() => {
   flex-direction: row-reverse; /* 自己发送的消息，用户信息在右侧 */
 }
 
+.own-message-row .message-meta {
+  text-align: left;
+}
+
 .other-message-row {
   flex-direction: row; /* 其他人发送的消息，用户信息在左侧 */
 }
@@ -1316,19 +1416,31 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   min-width: fit-content;
+  text-align: center;
+}
+
+.message-meta {
+  margin-bottom: 0.2rem;
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+.user-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  color: #333;
+  max-width: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .message-time {
-  font-size: 0.65rem;
   opacity: 0.7;
   color: black; /* 设置时间颜色为黑色 */
-}
-
-.user-avatar.small {
-  width: 24px;
-  height: 24px;
-  font-size: 0.7rem;
-  min-width: 24px;
+  font-size: 0.65rem;
+  white-space: nowrap;
 }
 
 /* 删除不再使用的旧类 */

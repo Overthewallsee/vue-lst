@@ -8,7 +8,7 @@ const getBaseURL = () => {
   if (import.meta.env.MODE === 'development') {
     return '' // 开发环境使用相对路径，通过Vite代理
   } else if (import.meta.env.MODE === 'production') {
-    return 'http://127.0.0.1:8888' // 生产环境
+    return 'http://81.68.197.173:8899' // 生产环境
   }
   return ''
 }
@@ -35,12 +35,12 @@ const getWebSocketBaseURL = () => {
   
   // 默认值
   if (import.meta.env.MODE === 'development') {
-    return 'ws://127.0.0.1:8888'
+    return 'ws://127.0.0.1:8899'
   } else if (import.meta.env.MODE === 'production') {
-    return 'wss://127.0.0.1:8888'
+    return 'wss://81.68.197.173:8899'
   }
   
-  return 'ws://127.0.0.1:8888'
+  return 'ws://127.0.0.1:8899'
 }
 
 export const API_BASE_URL = getBaseURL()

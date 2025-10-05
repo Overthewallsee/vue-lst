@@ -187,6 +187,15 @@ async function onSubmit(e) {
         router.push('/features')
       } else {
         successMessage.value = `注册成功：${form.value.username}`
+        // 如果返回了token，可以存储到localStorage
+                if (data.token) {
+                  localStorage.setItem('token', data.token)
+                }
+
+                // 如果返回了用户信息，可以存储到localStorage
+                if (data.user) {
+                  localStorage.setItem('user', JSON.stringify(data.user))
+                }
         // 注册成功后自动跳转到功能页面
         setTimeout(() => {
           router.push('/features')

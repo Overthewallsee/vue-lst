@@ -206,7 +206,7 @@
               :class="{ 'current-user': user.name === currentUser.name }"
             >
               <div class="user-avatar" :style="{ backgroundColor: user.color }">
-                {{ user.name.charAt(0).toUpperCase() }}
+                {{ (user.name ? user.name.charAt(0) : '').toUpperCase() }}
               </div>
               <span class="user-name">{{ user.name }}</span>
               <span v-if="user.name === currentUser.name" class="you-tag">你</span>
@@ -227,9 +227,9 @@
               <div class="message-header">
                 <div class="user-info">
                   <div class="user-avatar small" :style="{ backgroundColor: message.userColor }">
-                    {{ message.userName.charAt(0).toUpperCase() }}
+                    {{ (message.name ? message.name.charAt(0) : '').toUpperCase() }}
                   </div>
-                  <span class="user-name">{{ message.userName }}</span>
+                  <span class="user-name">{{ message.name }}</span>
                 </div>
                 <span class="message-time">{{ formatTime(message.timestamp) }}</span>
               </div>
@@ -427,7 +427,7 @@ const createRoom = async () => {
       showCreateForm.value = false
       // this.onlineUsers.value = data.nameList;
       //this.$set(this.onlineUsers, 'value', data.nameList);
-      handleUserListUpdate(data.nameList);
+      // handleUserListUpdate(data.nameList);
       
       // 连接到WebSocket
       connectWebSocket(newRoomId.value)
@@ -564,7 +564,10 @@ const connectWebSocket = (roomId: string) => {
     }
   }
   
-  websocket.value.onclose = () => {
+  websocket.value.onclose = (event) => {
+    console.log('关闭码:', event.code);  // 标准状态码
+    console.log('原因:', event.reason);  // 后端返回的"finish"可能在这里
+    console.log('是否正常关闭:', event.wasClean);
     console.log('WebSocket连接已关闭')
     stopHeartbeat()
   }
@@ -583,12 +586,12 @@ const handleWebSocketMessage = (data: any) => {
       handleUserJoined(data.user)
       break
       
-    case 'user_left':
+    case 'leave':
       // 用户离开
       handleUserLeft(data.userId)
       break
       
-    case 'chat_message':
+    case 'chat':
       // 聊天消息
       handleChatMessage(data.message)
       break
@@ -606,10 +609,10 @@ const handleWebSocketMessage = (data: any) => {
 // 处理新用户加入
 const handleUserJoined = (user: User) => {
   // 检查用户是否已存在
-  const userExists = onlineUsers.value.some(u => u.id === user.id)
+  const userExists = onlineUsers.value.some(u => u.name === user.name)
   
   if (!userExists) {
-    onlineUsers.value.push(user)
+      onlineUsers.value.push(user); // 直接添加元素，Vue 3会自动处理响应性
   }
   
   // 添加系统消息
@@ -654,7 +657,7 @@ const handleChatMessage = (messageData: any) => {
   const message: Message = {
     id: messageData.id,
     userId: messageData.userId,
-    userName: messageData.userName,
+    name: messageData.username,
     userColor: messageData.userColor,
     content: messageData.content,
     timestamp: new Date(messageData.timestamp)
@@ -695,7 +698,7 @@ const sendMessage = () => {
   }
 
   const messageData = {
-    type: 'chat_message',
+    type: 'chat',
     message: {
       content: newMessage.value.trim()
     }
@@ -1212,8 +1215,8 @@ onMounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.5);
   overflow: hidden;
   margin-bottom: 1.5rem;
-  height: calc(100vh - 150px);
-  min-height: 400px; /* 设置最小高度确保可读性 */
+  min-height: calc(100vh - 150px); /* 使用min-height替代height */
+  max-height: calc(100vh - 150px); /* 添加max-height确保不会超出 */
 }
 
 /* 消息容器 */
@@ -1226,7 +1229,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 1.2rem;
   scroll-behavior: smooth; /* 平滑滚动 */
-  max-height: calc(100vh - 300px); /* 限制最大高度，确保滚动条正确显示 */
+  min-height: 0; /* 允许容器收缩以适应内容 */
 }
 
 .messages-container::after {
@@ -1389,6 +1392,8 @@ onMounted(() => {
   
   .users-panel, .chat-main {
     border-radius: 12px;
+    height: auto; /* 允许在小屏幕上自适应高度 */
+    min-height: 300px; /* 设置最小高度 */
   }
   
   .messages-container {

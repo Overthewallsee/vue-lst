@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/lst/api': {
-        target: 'http://127.0.0.1:8888',
+        target: 'http://127.0.0.1:8899',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/lst\/api/, '/lst/api')
       }

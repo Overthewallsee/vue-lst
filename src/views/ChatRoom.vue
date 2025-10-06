@@ -296,7 +296,13 @@ import { useRouter } from 'vue-router'
 import { getUserName } from '@/utils/user.js'
 import { WS_BASE_URL } from '@/api/config.js'
 
+// 添加 vconsole 导入
+// import VConsole from 'vconsole'
+
 const router = useRouter()
+
+// vConsole 实例引用
+let vConsoleInstance = null
 
 // 页面状态控制
 const showActionModal = ref(true) // 显示选择操作界面
@@ -565,7 +571,12 @@ const connectWebSocket = (roomId: string) => {
   // 创建新的WebSocket连接
   // 使用配置文件中的WebSocket基础URL
   const token = localStorage.getItem('token')
-  const wsUrl = `/lst/ws/chat/${roomId}?token=${token}`
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host;
+  // const wsUrl = `/lst/ws/chat/${roomId}?token=${token}`
+  const wsUrl = `${protocol}//${host}/lst/ws/chat/${roomId}?token=${token}`
+  console.log(wsUrl)
+
   
   websocket.value = new WebSocket(wsUrl)
   
@@ -824,6 +835,12 @@ onBeforeUnmount(() => {
   
   // 移除 resize 事件监听器
   window.removeEventListener('resize', scrollToBottom)
+  
+  // 销毁 vConsole 实例
+  if (vConsoleInstance) {
+    vConsoleInstance.destroy()
+    // console.log('vConsole destroyed')
+  }
 })
 
 // 组件挂载时滚动到底部
@@ -832,6 +849,10 @@ onMounted(() => {
   
   // 添加 resize 事件监听器以处理窗口大小变化
   window.addEventListener('resize', scrollToBottom)
+  
+  // 初始化 vconsole
+  // vConsoleInstance = new VConsole()
+  // console.log('vConsole initialized for chat room debugging')
 })
 
 </script>

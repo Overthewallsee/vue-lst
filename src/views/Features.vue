@@ -258,7 +258,7 @@ const features: Feature[] = [
   {
     id: 8,
     title: '笔记本',
-    description: '富文本笔记编辑器，支持markdown、多媒体内容和云端同步',
+    description: '富文本笔记编辑器，支持文字、多媒体内容和云端同步',
     icon: '📝',
     gradient: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
     status: '可用',

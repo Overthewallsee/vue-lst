@@ -565,7 +565,7 @@ const connectWebSocket = (roomId: string) => {
   // 创建新的WebSocket连接
   // 使用配置文件中的WebSocket基础URL
   const token = localStorage.getItem('token')
-  const wsUrl = `${WS_BASE_URL}/lst/ws/chat/${roomId}?token=${token}`
+  const wsUrl = `/lst/ws/chat/${roomId}?token=${token}`
   
   websocket.value = new WebSocket(wsUrl)
   

@@ -161,51 +161,62 @@ async function onSubmit(e) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody)
-    })
-
-    const data = await response.json()
-
-    if (response.ok) {
-      if (isLogin.value) {
-        successMessage.value = `欢迎回来：${form.value.phoneNumber}`
-        // 登录成功后的处理逻辑
-        console.log('登录成功:', data)
-
-        // 如果返回了token，可以存储到localStorage
-        if (data.token) {
-          localStorage.setItem('token', data.token)
-        }
-
-        // 如果返回了用户信息，可以存储到localStorage
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user))
-        }
-
-        // 跳转到功能页面
-        router.push('/features')
-      } else {
-        successMessage.value = `注册成功：${form.value.username}`
-        // 如果返回了token，可以存储到localStorage
-                if (data.token) {
-                  localStorage.setItem('token', data.token)
-                }
-
-                // 如果返回了用户信息，可以存储到localStorage
-                if (data.user) {
-                  localStorage.setItem('user', JSON.stringify(data.user))
-                }
-        // 注册成功后自动跳转到功能页面
-        setTimeout(() => {
-          router.push('/features')
-        }, 2000)
+    }).then(response => {
+      if (!response.ok) {
+        return response.text().then(errorStr => {
+              throw new Error(errorStr); // 抛出错误字符串
+            });
       }
-    } else {
-      errorMessage.value = data.message || (isLogin.value ? '登录失败，请检查手机号和密码' : '注册失败')
-    }
+      return response;
+    }).then(response => {
+       const data = response.json()
+      if (isLogin.value) {
+              successMessage.value = `欢迎回来：${form.value.phoneNumber}`
+              // 登录成功后的处理逻辑
+              console.log('登录成功:', data)
+
+              // 如果返回了token，可以存储到localStorage
+              if (data.token) {
+                localStorage.setItem('token', data.token)
+              }
+
+              // 如果返回了用户信息，可以存储到localStorage
+              if (data.user) {
+                localStorage.setItem('user', JSON.stringify(data.user))
+              }
+
+              // 跳转到功能页面
+              router.push('/features')
+            } else {
+              successMessage.value = `注册成功：${form.value.username}`
+              // 如果返回了token，可以存储到localStorage
+                      if (data.token) {
+                        localStorage.setItem('token', data.token)
+                      }
+
+                      // 如果返回了用户信息，可以存储到localStorage
+                      if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user))
+                      }
+              // 注册成功后自动跳转到功能页面
+              setTimeout(() => {
+                router.push('/features')
+              }, 2000)
+            }
+    }).catch(error => {
+      // 获取错误状态下的字符串信息
+        console.log('错误信息:', error.message); // 例如："参数格式错误"
+        errorMessage.value = error.message
+    });
+
+
+
+
 
   } catch (error) {
     console.error('请求失败:', error)
-    errorMessage.value = '网络错误，请稍后重试'
+    // errorMessage.value = '网络错误，请稍后重试'
+    errorMessage.value = response
   } finally {
     loading.value = false
   }

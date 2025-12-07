@@ -4,6 +4,8 @@ import Login from '../views/login.vue'
 import Features from '../views/Features.vue'
 import ChatRoom from '../views/ChatRoom.vue'
 import Calendar from '../views/Calendar.vue'
+import StockList from '../views/StockList.vue'
+import StockDetail from '../views/StockDetail.vue'
 import Projects from '../views/Projects.vue'
 import ProjectDetail from '../views/ProjectDetail.vue'
 import About from '../views/About.vue'
@@ -68,6 +70,19 @@ const routes = [
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound
+  },
+  {
+    path: '/stocklist',
+    name: 'StockList',
+    component: StockList,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/stockDetail',
+    name: 'StockDetail',
+    component: StockDetail,
+    meta: { requiresAuth: true },
+    props: true
   }
 ]
 

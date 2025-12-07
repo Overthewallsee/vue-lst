@@ -44,7 +44,7 @@ const passwordError = computed(() => {
   } else {
     // 注册时密码要求
     if (form.value.password.length < 8) return '密码至少 8 位'
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(form.value.password)) 
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(form.value.password))
       return '密码需包含大小写字母和数字'
     return ''
   }
@@ -60,23 +60,23 @@ const confirmPasswordError = computed(() => {
 const canSubmit = computed(() => {
   if (isLogin.value) {
     return (
-      form.value.phoneNumber &&
-      form.value.password &&
-      !phoneNumberError.value &&
-      !passwordError.value &&
-      !loading.value
+        form.value.phoneNumber &&
+        form.value.password &&
+        !phoneNumberError.value &&
+        !passwordError.value &&
+        !loading.value
     )
   } else {
     return (
-      form.value.username &&
-      form.value.phoneNumber &&
-      form.value.password &&
-      form.value.confirmPassword &&
-      !usernameError.value &&
-      !phoneNumberError.value &&
-      !passwordError.value &&
-      !confirmPasswordError.value &&
-      !loading.value
+        form.value.username &&
+        form.value.phoneNumber &&
+        form.value.password &&
+        form.value.confirmPassword &&
+        !usernameError.value &&
+        !phoneNumberError.value &&
+        !passwordError.value &&
+        !confirmPasswordError.value &&
+        !loading.value
     )
   }
 })
@@ -143,7 +143,7 @@ async function onSubmit(e) {
 
     // 使用相对路径，通过Vite代理转发请求
     const endpoint = isLogin.value ? '/lst/api/auth/login' : '/lst/api/auth/register'
-    
+
     const requestBody = {
       phoneNumber: form.value.phoneNumber, // 将发送给后端的字段改为 phoneNumber
       password: encryptedPassword,
@@ -161,62 +161,51 @@ async function onSubmit(e) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody)
-    }).then(response => {
-      if (!response.ok) {
-        return response.text().then(errorStr => {
-              throw new Error(errorStr); // 抛出错误字符串
-            });
-      }
-      return response;
-    }).then(response => {
-       const data = response.json()
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
       if (isLogin.value) {
-              successMessage.value = `欢迎回来：${form.value.phoneNumber}`
-              // 登录成功后的处理逻辑
-              console.log('登录成功:', data)
+        successMessage.value = `欢迎回来：${form.value.phoneNumber}`
+        // 登录成功后的处理逻辑
+        console.log('登录成功:', data)
 
-              // 如果返回了token，可以存储到localStorage
-              if (data.token) {
-                localStorage.setItem('token', data.token)
-              }
+        // 如果返回了token，可以存储到localStorage
+        if (data.token) {
+          localStorage.setItem('token', data.token)
+        }
 
-              // 如果返回了用户信息，可以存储到localStorage
-              if (data.user) {
-                localStorage.setItem('user', JSON.stringify(data.user))
-              }
+        // 如果返回了用户信息，可以存储到localStorage
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
 
-              // 跳转到功能页面
-              router.push('/features')
-            } else {
-              successMessage.value = `注册成功：${form.value.username}`
-              // 如果返回了token，可以存储到localStorage
-                      if (data.token) {
-                        localStorage.setItem('token', data.token)
-                      }
+        // 跳转到功能页面
+        router.push('/features')
+      } else {
+        successMessage.value = `注册成功：${form.value.username}`
+        // 如果返回了token，可以存储到localStorage
+        if (data.token) {
+          localStorage.setItem('token', data.token)
+        }
 
-                      // 如果返回了用户信息，可以存储到localStorage
-                      if (data.user) {
-                        localStorage.setItem('user', JSON.stringify(data.user))
-                      }
-              // 注册成功后自动跳转到功能页面
-              setTimeout(() => {
-                router.push('/features')
-              }, 2000)
-            }
-    }).catch(error => {
-      // 获取错误状态下的字符串信息
-        console.log('错误信息:', error.message); // 例如："参数格式错误"
-        errorMessage.value = error.message
-    });
-
-
-
-
+        // 如果返回了用户信息，可以存储到localStorage
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
+        // 注册成功后自动跳转到功能页面
+        setTimeout(() => {
+          router.push('/features')
+        }, 2000)
+      }
+    } else {
+      errorMessage.value = data.message || (isLogin.value ? '登录失败，请检查手机号和密码' : '注册失败')
+    }
 
   } catch (error) {
     console.error('请求失败:', error)
-    // errorMessage.value = '网络错误，请稍后重试'
-    errorMessage.value = response
+    errorMessage.value = '网络错误，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -279,12 +268,12 @@ async function onSubmit(e) {
           <label class="field" v-if="!isLogin">
             <span>用户名</span>
             <input
-              v-model.trim="form.username"
-              type="text"
-              placeholder="请输入用户名（3-20个字符）"
-              @blur="touched.username = true"
-              @input="clearMessages"
-              :aria-invalid="!!usernameError"
+                v-model.trim="form.username"
+                type="text"
+                placeholder="请输入用户名（3-20个字符）"
+                @blur="touched.username = true"
+                @input="clearMessages"
+                :aria-invalid="!!usernameError"
             />
             <div class="error" v-if="usernameError">{{ usernameError }}</div>
           </label>
@@ -292,12 +281,12 @@ async function onSubmit(e) {
           <label class="field">
             <span>手机号</span>
             <input
-              v-model.trim="form.phoneNumber"
-              type="tel"
-              placeholder="请输入11位手机号"
-              @blur="touched.phoneNumber = true"
-              @input="clearMessages"
-              :aria-invalid="!!phoneNumberError"
+                v-model.trim="form.phoneNumber"
+                type="tel"
+                placeholder="请输入11位手机号"
+                @blur="touched.phoneNumber = true"
+                @input="clearMessages"
+                :aria-invalid="!!phoneNumberError"
             />
             <div class="error" v-if="phoneNumberError">{{ phoneNumberError }}</div>
           </label>
@@ -305,12 +294,12 @@ async function onSubmit(e) {
           <label class="field">
             <span>密码</span>
             <input
-              v-model="form.password"
-              type="password"
-              :placeholder="isLogin ? '至少 6 位' : '至少 8 位，需包含大小写字母和数字'"
-              @blur="touched.password = true"
-              @input="clearMessages"
-              :aria-invalid="!!passwordError"
+                v-model="form.password"
+                type="password"
+                :placeholder="isLogin ? '至少 6 位' : '至少 8 位，需包含大小写字母和数字'"
+                @blur="touched.password = true"
+                @input="clearMessages"
+                :aria-invalid="!!passwordError"
             />
             <div class="error" v-if="passwordError">{{ passwordError }}</div>
           </label>
@@ -319,12 +308,12 @@ async function onSubmit(e) {
           <label class="field" v-if="!isLogin">
             <span>确认密码</span>
             <input
-              v-model="form.confirmPassword"
-              type="password"
-              placeholder="请再次输入密码"
-              @blur="touched.confirmPassword = true"
-              @input="clearMessages"
-              :aria-invalid="!!confirmPasswordError"
+                v-model="form.confirmPassword"
+                type="password"
+                placeholder="请再次输入密码"
+                @blur="touched.confirmPassword = true"
+                @input="clearMessages"
+                :aria-invalid="!!confirmPasswordError"
             />
             <div class="error" v-if="confirmPasswordError">{{ confirmPasswordError }}</div>
           </label>
@@ -400,11 +389,11 @@ async function onSubmit(e) {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at top left, rgba(147, 197, 253, 0.15) 0%, transparent 70%),
-    radial-gradient(ellipse at top right, rgba(134, 239, 172, 0.12) 0%, transparent 70%),
-    radial-gradient(ellipse at bottom left, rgba(165, 243, 252, 0.08) 0%, transparent 70%),
-    radial-gradient(ellipse at bottom right, rgba(254, 202, 202, 0.06) 0%, transparent 70%),
-    linear-gradient(135deg,
+      radial-gradient(ellipse at top left, rgba(147, 197, 253, 0.15) 0%, transparent 70%),
+      radial-gradient(ellipse at top right, rgba(134, 239, 172, 0.12) 0%, transparent 70%),
+      radial-gradient(ellipse at bottom left, rgba(165, 243, 252, 0.08) 0%, transparent 70%),
+      radial-gradient(ellipse at bottom right, rgba(254, 202, 202, 0.06) 0%, transparent 70%),
+      linear-gradient(135deg,
       rgba(240, 249, 255, 0.8) 0%,
       rgba(248, 250, 252, 0.9) 25%,
       rgba(241, 245, 249, 0.85) 50%,
@@ -417,9 +406,9 @@ async function onSubmit(e) {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.4) 0%, transparent 60%),
-    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 60% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%);
+      radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.4) 0%, transparent 60%),
+      radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 60% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%);
   opacity: 0.8;
   animation: cloudDrift 30s ease-in-out infinite;
 }
@@ -567,8 +556,8 @@ async function onSubmit(e) {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+      linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
   background-size: 80px 80px, 80px 80px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,0,0,0.9), transparent 90%);
   opacity: 0.2;
@@ -684,15 +673,15 @@ async function onSubmit(e) {
   overflow: hidden;
   margin-bottom: 16px;
   box-shadow: 0 8px 32px rgba(142, 162, 255, 0.3),
-              0 4px 16px rgba(158, 107, 255, 0.2),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  0 4px 16px rgba(158, 107, 255, 0.2),
+  inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .logo:hover {
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 12px 40px rgba(142, 162, 255, 0.4),
-              0 6px 20px rgba(158, 107, 255, 0.3),
-              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  0 6px 20px rgba(158, 107, 255, 0.3),
+  inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 .logo-text {
   font-size: 24px;
@@ -940,9 +929,9 @@ async function onSubmit(e) {
     right: 0;
     bottom: 0;
     background:
-      radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
-      radial-gradient(circle at 40% 60%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
     animation: backgroundShift 15s ease-in-out infinite;
   }
 }

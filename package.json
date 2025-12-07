@@ -3,11 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "build:test": "vite build --mode test"
+    "build:test": "vite build --mode test",
+    "electron:dev": "electron .",
+    "electron:build": "npm run build && electron-builder"
   },
   "dependencies": {
     "axios": "^1.12.2",
@@ -23,10 +26,35 @@
     "@types/node": "^24.6.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "autoprefixer": "^10.4.21",
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12",
+    "electron-is-dev": "^3.0.1",
     "postcss": "^8.5.6",
     "vite": "npm:rolldown-vite@7.1.12"
   },
-  "overrides": {
-    "vite": "npm:rolldown-vite@7.1.12"
+  "build": {
+    "appId": "com.vue-login.desktop",
+    "productName": "Vue Login Desktop",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "electronBuilder": {
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    }
   }
 }

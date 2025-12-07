@@ -267,6 +267,19 @@ const features: Feature[] = [
     features: ['富文本编辑', 'Markdown支持', '多媒体插入', '云端同步', '标签分类'],
     updateTime: '2024-01-11',
     route: '/notes'
+  },
+  {
+    id: 9,
+    title: '股票查看',
+    description: '实时股票行情查看，支持全球主要股票市场数据和个性化关注列表',
+    icon: '📈',
+    gradient: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+    status: '可用',
+    category: '金融工具',
+    tags: ['股票行情', '金融数据'],
+    features: ['实时行情', '股票搜索', '自选列表', 'K线图', '财务数据'],
+    updateTime: '2024-01-16',
+    route: '/stocklist'
   }
 ]
 

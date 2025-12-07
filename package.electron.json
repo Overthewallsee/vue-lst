@@ -1,0 +1,33 @@
+{
+  "name": "vue-login-desktop",
+  "version": "1.0.0",
+  "description": "Vue Login 应用的桌面版本",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "build-electron": "npm run build && electron-builder"
+  },
+  "build": {
+    "appId": "com.vue-login.desktop",
+    "productName": "Vue Login Desktop",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}

@@ -1,13 +1,20 @@
 <template>
   <div class="chat-page">
-    <el-button type="primary" @click="dialogVisible = true">打开聊天室操作面板</el-button>
-
-    <!-- 移除 destroy-on-close，修复关闭逻辑冲突 -->
     <el-dialog
       width="540px"
       v-model="dialogVisible"
-      :before-close="handleClose"
+      :close-on-click-modal="false"
     >
+      <!-- 自定义头部：标题 + 右上角返回箭头，隐藏原生关闭X -->
+      <template #header>
+        <div class="dialog-header-wrap">
+          <span class="dialog-title">{{ activeTab === 'create' ? '创建聊天室' : '加入聊天室' }}</span>
+          <el-icon @click="goBackFeatures" class="back-icon">
+            <ArrowLeft />
+          </el-icon>
+        </div>
+      </template>
+
       <el-tabs v-model="activeTab" type="card" class="mt-0">
         <!-- 创建聊天室 Tab -->
         <el-tab-pane label="创建聊天室" name="create">
@@ -37,7 +44,6 @@
               </el-radio-group>
             </el-form-item>
 
-            <!-- 私密房间创建密码 -->
             <el-form-item label="房间访问密码" prop="roomPwd" v-if="createForm.authType === 'private'">
               <el-input
                 v-model="createForm.roomPwd"
@@ -66,7 +72,7 @@
           </el-form>
         </el-tab-pane>
 
-        <!-- 加入聊天室 Tab（优化布局） -->
+        <!-- 加入聊天室 Tab -->
         <el-tab-pane label="加入聊天室" name="join">
           <el-form
             ref="joinFormRef"
@@ -74,7 +80,6 @@
             label-width="110px"
             :rules="joinRules"
           >
-            <!-- 搜索房间 -->
             <el-form-item label="搜索房间" prop="roomKey">
               <el-autocomplete
                 v-model="joinForm.roomKey"
@@ -85,7 +90,6 @@
               />
             </el-form-item>
 
-            <!-- 选中房间后展示房间详情卡片 -->
             <div class="room-info-card" v-if="currentSelectRoom">
               <div class="info-title">选中房间信息</div>
               <div class="info-row">
@@ -105,7 +109,6 @@
               </div>
             </div>
 
-            <!-- 私密房间强制密码输入框 -->
             <el-form-item label="房间密码" prop="pwd" v-if="joinForm.isPrivate" class="mt-3">
               <el-input
                 v-model="joinForm.pwd"
@@ -121,7 +124,7 @@
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button @click="goBackFeatures">取消</el-button>
           <el-button type="primary" @click="submitForm">
             {{ activeTab === 'create' ? '创建聊天室' : '加入聊天室' }}
           </el-button>
@@ -132,11 +135,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { ArrowLeft } from '@element-plus/icons-vue'
 
-// 弹窗开关
+const router = useRouter()
+
+// 页面加载自动打开弹窗
 const dialogVisible = ref(false)
+onMounted(() => {
+  dialogVisible.value = true
+})
+
 const activeTab = ref('create')
 
 // 创建表单
@@ -150,7 +161,6 @@ const createForm = reactive({
   optimizeList: ['autoClear', 'hideDanmu', 'limitSend']
 })
 
-// 创建表单校验
 const createRules = reactive({
   roomName: [{ required: true, message: '请输入房间名称', trigger: 'blur' }],
   authType: [{ required: true, message: '请选择房间权限', trigger: 'change' }],
@@ -177,7 +187,6 @@ const joinForm = reactive({
   isPrivate: false
 })
 
-// 当前选中房间完整信息（用于展示人数、公告）
 const currentSelectRoom = ref<{
   id: number
   name: string
@@ -186,7 +195,6 @@ const currentSelectRoom = ref<{
   desc: string
 } | null>(null)
 
-// 加入表单校验：私密房间密码必填
 const joinRules = reactive({
   roomKey: [{ required: true, message: '请搜索并选择目标房间', trigger: 'blur' }],
   pwd: [
@@ -202,7 +210,7 @@ const joinRules = reactive({
   ]
 })
 
-// 静态房间数据（新增公告desc字段）
+// 模拟房间数据
 const roomList = [
   { id: 1, name: '前端技术交流群', online: 68, type: 'public', desc: '分享Vue3、TS、Vite前端开发技术，禁止广告' },
   { id: 2, name: 'UI设计讨论室', online: 22, type: 'private', desc: '内部设计师交流，仅公司员工可进入' },
@@ -214,9 +222,8 @@ const roomList = [
   { id: 8, name: '测试工程师交流大厅', online: 55, type: 'public', desc: '自动化测试、性能测试经验分享' },
 ]
 
-// 【修复重点】before-close 必须接收 done 参数并执行 done() 才能关闭弹窗
-const handleClose = (done: () => void) => {
-  // 重置表单数据
+// 返回/取消统一跳转 /features
+const goBackFeatures = () => {
   createFormRef.value?.resetFields()
   joinFormRef.value?.resetFields()
   createForm.roomPwd = ''
@@ -225,11 +232,10 @@ const handleClose = (done: () => void) => {
   joinForm.pwd = ''
   joinForm.isPrivate = false
   currentSelectRoom.value = null
-  // 执行关闭
-  done()
+  router.push('/features')
 }
 
-// 搜索联想过滤
+// 搜索联想
 const querySearchAsync = (queryStr: string, callback: Function) => {
   let result: any[] = []
   if (queryStr) {
@@ -246,7 +252,7 @@ const querySearchAsync = (queryStr: string, callback: Function) => {
   callback(result)
 }
 
-// 下拉选中房间，赋值完整房间信息用于展示
+// 选中房间
 const handleSelectRoom = (item: any) => {
   const target = roomList.find(r => r.id === item.id)
   if (target) {
@@ -293,7 +299,6 @@ const submitForm = () => {
 .mt-3 {
   margin-top: 12px;
 }
-/* 房间信息卡片样式 */
 .room-info-card {
   background-color: #f5f7fa;
   border-radius: 6px;
@@ -322,5 +327,28 @@ const submitForm = () => {
 }
 .el-tag {
   margin-left: 8px;
+}
+/* 头部布局 */
+.dialog-header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.dialog-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.back-icon {
+  font-size: 20px;
+  cursor: pointer;
+  color: #606266;
+}
+.back-icon:hover {
+  color: #409eff;
+}
+/* 核心：隐藏ElementPlus原生右上角关闭X按钮 */
+:deep(.el-dialog__headerbtn) {
+  display: none !important;
 }
 </style>

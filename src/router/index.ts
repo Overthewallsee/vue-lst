@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Login from '../views/login.vue'
 import Features from '../views/Features.vue'
-import ChatRoom from '../views/ChatRoom.vue'
+import ChatRoom from '../views/chat/createChatRoom.vue'
 import Calendar from '../views/Calendar.vue'
 import StockList from '../views/StockList.vue'
 import StockDetail from '../views/StockDetail.vue'
@@ -27,14 +27,14 @@ const routes = [
   {
     path: '/features',
     name: 'Features',
-    component: Features,
-    meta: { requiresAuth: true }
+    component: Features
+    // meta: { requiresAuth: true }
   },
   {
     path: '/features/chat',
     name: 'ChatRoom',
-    component: ChatRoom,
-    meta: { requiresAuth: true }
+    component: ChatRoom
+    // meta: { requiresAuth: true }
   },
   {
     path: '/calendar',

@@ -16,6 +16,10 @@ export default defineConfig({
         target: 'http://127.0.0.1:8899',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/lst\/api/, '/lst/api')
+      },
+       '/ai_lst': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
       }
     }
   }

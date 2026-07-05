@@ -130,9 +130,41 @@
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
+import CryptoJS from 'crypto-js'
 import { User, Lock, View, Hide, Phone } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 const router = useRouter()
+
+const encryptPassword = (password) => {
+  // 手动固定16位IV
+  // const iv = CryptoJS.enc.Utf8.parse('1234567812345678')
+  // const secretKey = CryptoJS.enc.Utf8.parse('LST_LOGIN_SECRET_KEY_2024')
+  // // const encrypted = CryptoJS.AES.encrypt(password, key, { iv: iv }).toString()
+  // return CryptoJS.AES.encrypt(password, secretKey, { iv: iv }).toString()
+//   const iv = CryptoJS.enc.Utf8.parse('1234567812345678')
+// const key = CryptoJS.enc.Utf8.parse('LST_LOGIN_SECRET_KEY_2024')
+// const SECRET_KEY = 'LST_LOGIN_SECRET_KEY_2024'
+ 
+// const encrypted = CryptoJS.AES.encrypt(password, SECRET_KEY)
+//   // 手动取出iv、密文，拼接冒号分隔
+//   const ivBase64 = encrypted.iv.toString(CryptoJS.enc.Base64)
+//   const dataBase64 = encrypted.ciphertext.toString(CryptoJS.enc.Base64)
+//   // 输出：ivBase64:dataBase64，带冒号，适配你原来的后端代码
+//   return `${ivBase64}:${dataBase64}`
+const AES_KEY = CryptoJS.enc.Utf8.parse('LST_LOGIN_KEY_16')
+const AES_IV = CryptoJS.enc.Utf8.parse('1234567890ABCDEF')
+
+const encrypted = CryptoJS.AES.encrypt(password, AES_KEY, {
+    iv: AES_IV,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  })
+
+  const ivBase64 = AES_IV.toString(CryptoJS.enc.Base64)
+  const dataBase64 = encrypted.ciphertext.toString(CryptoJS.enc.Base64)
+
+  return `${ivBase64}:${dataBase64}`
+}
 
 // Tab标识
 const activeTab = ref('login')
@@ -165,10 +197,12 @@ const handleLogin = async () => {
     if (!valid) return
     loginLoading.value = true
     try {
+      const encryptedPassword = encryptPassword(loginForm.password)
+
       // POST 请求，入参对应后端 LoginRequest DTO
       const res = await axios.post('/ai_lst/user/login', {
         username: loginForm.username,
-        password: loginForm.password
+        password: encryptedPassword
       })
       // 成功逻辑
       if (res.data.code === 200) {
@@ -240,9 +274,10 @@ const handleRegister = async () => {
     if (!valid) return
     registerLoading.value = true
     try {
+      const encryptedPassword = encryptPassword(regForm.password)
       const payload = {
         username: regForm.username.trim(),
-        password: regForm.password,
+        password: encryptedPassword,
         nickname: regForm.nickname.trim(),
         phone: regForm.phone,
         email: regForm.email.trim()

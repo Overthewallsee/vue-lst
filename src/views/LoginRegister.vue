@@ -115,6 +115,8 @@ import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import { User, Lock, View, Hide, Phone } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 // Tab标识
 const activeTab = ref('login')
@@ -163,7 +165,7 @@ const handleLogin = async () => {
           localStorage.removeItem('username')
         }
         // 此处可写路由跳转逻辑
-        // router.push('/home')
+        router.push('/features')
       } else {
         ElMessage.error(res.data.msg || '登录失败')
       }

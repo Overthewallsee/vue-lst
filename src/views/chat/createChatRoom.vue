@@ -25,7 +25,7 @@
             :rules="createRules"
           >
             <el-form-item label="房间名称" prop="roomName">
-              <el-input v-model="createForm.roomName" placeholder="请输入聊天室名称" />
+              <el-input v-model="createForm.roomName" placeholder="请输入聊天室名称" maxlength="50" />
             </el-form-item>
 
             <el-form-item label="房间简介" prop="desc">
@@ -34,6 +34,7 @@
                 type="textarea"
                 :rows="3"
                 placeholder="简单描述房间用途/公告"
+                maxlength="200"
               />
             </el-form-item>
 
@@ -49,6 +50,7 @@
                 v-model="createForm.roomPwd"
                 show-password
                 placeholder="私密房间必须设置访问密码"
+                maxlength="100"
               />
             </el-form-item>
 
@@ -125,7 +127,7 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="goBackFeatures">取消</el-button>
-          <el-button type="primary" @click="submitForm">
+          <el-button type="primary" @click="submitForm" :loading="submitLoading">
             {{ activeTab === 'create' ? '创建聊天室' : '加入聊天室' }}
           </el-button>
         </div>
@@ -139,6 +141,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
+import axios from 'axios'
 
 const router = useRouter()
 
@@ -149,6 +152,8 @@ onMounted(() => {
 })
 
 const activeTab = ref('create')
+// 提交加载状态，防止重复点击
+const submitLoading = ref(false)
 
 // 创建表单
 const createFormRef = ref(null)
@@ -222,7 +227,7 @@ const roomList = [
   { id: 8, name: '测试工程师交流大厅', online: 55, type: 'public', desc: '自动化测试、性能测试经验分享' },
 ]
 
-// 返回/取消统一跳转 /features
+// 返回 /features 路由
 const goBackFeatures = () => {
   createFormRef.value?.resetFields()
   joinFormRef.value?.resetFields()
@@ -263,14 +268,35 @@ const handleSelectRoom = (item: any) => {
   }
 }
 
-// 提交表单
-const submitForm = () => {
+// 提交表单（区分创建/加入）
+const submitForm = async () => {
   if (activeTab.value === 'create') {
-    createFormRef.value.validate((valid: boolean) => {
-      if (valid) {
-        console.log('创建房间参数：', createForm)
+    createFormRef.value.validate(async (valid: boolean) => {
+      if (!valid) return
+      submitLoading.value = true
+      try {
+        // 组装后端 CreateChatRoomRequest DTO 参数
+        const reqData = {
+          name: createForm.roomName,
+          description: createForm.desc,
+          // 公开房间不传password，私密房间传密码
+          password: createForm.authType === 'private' ? createForm.roomPwd : null
+        }
+        // 调用后端创建接口
+        const res = await axios.post('/ai_lst/chatroom/create', reqData)
+        console.log('创建房间返回结果：', res.data)
         ElMessage.success('聊天室创建成功！')
         dialogVisible.value = false
+        // 重置表单
+        createFormRef.value?.resetFields()
+        createForm.roomPwd = ''
+      } catch (err: any) {
+        console.error('创建聊天室失败：', err)
+        // 后端返回错误提示
+        const msg = err.response?.data?.message || '创建聊天室请求失败，请检查后端服务'
+        ElMessage.error(msg)
+      } finally {
+        submitLoading.value = false
       }
     })
   } else {
@@ -347,7 +373,7 @@ const submitForm = () => {
 .back-icon:hover {
   color: #409eff;
 }
-/* 核心：隐藏ElementPlus原生右上角关闭X按钮 */
+/* 隐藏原生关闭X */
 :deep(.el-dialog__headerbtn) {
   display: none !important;
 }

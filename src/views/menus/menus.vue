@@ -1,37 +1,33 @@
 <template>
   <div class="app-container">
-    <!-- 顶部头部 -->
     <header class="page-header">
       <div class="header-text">
-        <h1 class="main-title">多功能服务</h1>
+        <h1 class="main-title">服务中心</h1>
         <p class="sub-title">常用功能一键直达</p>
       </div>
       <div class="header-icons">
         <el-icon class="icon-bell">
           <Bell />
         </el-icon>
-        <el-avatar size="40" src="https://picsum.photos/id/64/100/100"></el-avatar>
+        <el-avatar size="34" src="https://picsum.photos/id/64/100/100"></el-avatar>
       </div>
     </header>
 
-    <!-- 搜索框 -->
-    <el-input
-      class="search-input"
-      placeholder="搜索服务、订单、优惠"
-    >
-      <template #prefix>
-        <el-icon><Search /></el-icon>
-      </template>
-    </el-input>
+    <el-card class="search-card" shadow="always" :body-style="{ padding: '10px 12px' }">
+      <el-input class="search-input" placeholder="搜索服务、订单、优惠">
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+      </el-input>
+    </el-card>
 
-    <!-- 6宫格功能卡片 -->
     <div class="function-grid">
       <el-card
         v-for="(item, index) in funcList"
         :key="index"
         class="func-card"
-        :body-style="{ padding: '24px 12px' }"
-        shadow="never"
+        :body-style="{ padding: '16px 10px' }"
+        shadow="always"
       >
         <div class="card-inner">
           <div class="icon-wrap">
@@ -43,17 +39,18 @@
       </el-card>
     </div>
 
-    <!-- 本周常用模块 -->
-    <el-card class="weekly-card" shadow="never" :body-style="{ padding: '24px' }">
-      <div class="card-top-bar">
-        <span class="bar-title">本周常用</span>
-        <div class="bar-tabs">
-          <span class="tab-text">常用服务</span>
-          <span class="tab-text">最近使用</span>
-          <span class="tab-text">待办提醒</span>
-          <el-icon><ArrowRight /></el-icon>
+    <el-card class="weekly-card" shadow="always" :body-style="{ padding: '16px' }">
+      <template #header>
+        <div class="card-top-bar">
+          <span class="bar-title">本周常用</span>
+          <div class="bar-tabs">
+            <span class="tab-text">常用</span>
+            <span class="tab-text">最近</span>
+            <span class="tab-text">提醒</span>
+            <el-icon><ArrowRight /></el-icon>
+          </div>
         </div>
-      </div>
+      </template>
 
       <div class="service-row">
         <div class="service-col">
@@ -73,11 +70,9 @@
       </div>
     </el-card>
 
-    <!-- 底部占位 -->
     <div class="page-space"></div>
 
-    <!-- 底部Tab导航 -->
-    <el-card class="bottom-tab" shadow="never" :body-style="{ padding: '12px 0' }">
+    <el-card class="bottom-tab" shadow="always" :body-style="{ padding: '8px 0' }">
       <div class="tab-inner">
         <div
           class="tab-item"
@@ -99,7 +94,6 @@ import {
   DocumentCopy,
   Bell,
   Search,
-  User,
   DocumentChecked,
   Tickets,
   Wallet,
@@ -114,7 +108,7 @@ const funcList = [
   { icon: Wallet, name: '我的钱包', desc: '' },
   { icon: Document, name: '会员中心', desc: '快速支付' },
   { icon: Ticket, name: '优惠券', desc: '查看记录' },
-  { icon: Document, name: '客服帮助', desc: '在线咨询' }
+  { icon: Document, name: '聊天室', desc: '创建、加入聊天室' }
 ]
 
 const tabList = [
@@ -126,72 +120,78 @@ const tabList = [
 
 <style scoped>
 :root {
-  --primary: #165DFF;
-  --bg-page: #F5F7FA;
-  --text-main: #1D2129;
-  --text-gray: #86909C;
-  --border-color: #E5E6EB;
-  --card-radius: 16px;
-  --light-blue: #ECF5FF;
+  --primary: #2563eb;
+  --bg-page: #f4f6fb;
+  --surface: #ffffff;
+  --text-main: #111827;
+  --text-gray: #6b7280;
+  --border-color: #e5e7eb;
+  --card-radius: 14px;
+  --light-blue: #eef4ff;
 }
 
 .app-container {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: var(--bg-page);
-  padding: 32px 20px 100px;
+  /* background: linear-gradient(180deg, #f8fafc 0%, var(--bg-page) 100%); */
+  padding: 20px 16px 96px;
   box-sizing: border-box;
 }
 
-/* 头部 */
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 28px;
+  align-items: center;
+  margin-bottom: 18px;
 }
 
 .main-title {
-  font-size: 40px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
   margin: 0;
   line-height: 1.2;
   color: var(--text-main);
 }
 
 .sub-title {
-  font-size: 22px;
+  font-size: 13px;
   color: var(--text-gray);
-  margin: 8px 0 0;
+  margin: 4px 0 0;
 }
 
 .header-icons {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   align-items: center;
 }
 
 .icon-bell {
-  font-size: 28px;
+  font-size: 20px;
   color: var(--text-main);
 }
 
-/* 搜索框 */
+.search-card {
+  margin-bottom: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  /* background: var(--surface); */
+}
+
 .search-input {
-  margin-bottom: 28px;
+  width: 100%;
 }
 
 :deep(.el-input__wrapper) {
   border-radius: 999px;
-  background: #FFFFFF;
+  background: var(--surface);
   border: 1px solid var(--border-color);
   box-shadow: none;
   padding-left: 12px;
 }
 
 :deep(.el-input__inner) {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--text-main);
 }
 
@@ -199,70 +199,79 @@ const tabList = [
   color: var(--text-gray);
 }
 
-/* 功能卡片网格 */
 .function-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 28px;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .func-card {
   border-radius: var(--card-radius);
-  border: 1px solid var(--border-color);
-  background: #FFFFFF;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  /* background: var(--surface); */
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  border-radius: 16px;
+}
+
+.func-card:hover {
+  transform: translateY(-1px);
+  background: #f9fbff;
 }
 
 .card-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  text-align: center;
 }
 
 .icon-wrap {
-  width: 64px;
-  height: 64px;
-  background: var(--light-blue);
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  /* background: var(--light-blue); */
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .card-icon {
-  font-size: 32px;
+  font-size: 22px;
   color: var(--primary);
 }
 
 .card-name {
-  font-size: 21px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-main);
 }
 
 .card-desc {
-  font-size: 13px;
+  font-size: 11px;
+  line-height: 1.4;
   color: var(--text-gray);
+  min-height: 16px;
 }
 
-/* 本周常用卡片 */
 .weekly-card {
   border-radius: var(--card-radius);
   border: 1px solid var(--border-color);
-  background: #FFFFFF;
-  margin-bottom: 40px;
+  /* background: var(--surface); */
+  margin-bottom: 24px;
+  border-radius: 16px;
 }
 
 .card-top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  padding: 2px 0;
 }
 
 .bar-title {
-  font-size: 24px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-main);
 }
@@ -270,12 +279,12 @@ const tabList = [
 .bar-tabs {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   color: var(--text-gray);
 }
 
 .tab-text {
-  font-size: 15px;
+  font-size: 12px;
 }
 
 .service-row {
@@ -286,8 +295,8 @@ const tabList = [
 
 .split-line {
   width: 1px;
-  height: 40px;
-  background: var(--border-color);
+  height: 36px;
+  /* background: var(--border-color); */
 }
 
 .service-col {
@@ -296,32 +305,30 @@ const tabList = [
 }
 
 .col-title {
-  font-size: 20px;
-  font-weight: 500;
-  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
   color: var(--text-main);
 }
 
 .col-desc {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-gray);
 }
 
-/* 底部占位 */
 .page-space {
-  height: 50px;
+  height: 56px;
 }
 
-/* 底部Tab导航 */
 .bottom-tab {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
   bottom: 12px;
   width: min(480px, calc(100% - 24px));
-  border-radius: 24px;
+  border-radius: 999px;
   border: 1px solid var(--border-color);
-  background: #FFFFFF;
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .tab-inner {
@@ -333,20 +340,23 @@ const tabList = [
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   color: var(--text-gray);
-  font-size: 14px;
+  font-size: 12px;
+  padding: 6px 0;
+  border-radius: 999px;
 }
 
 .tab-item.active {
   color: var(--primary);
+  background: var(--light-blue);
 }
 
 .tab-item :deep(.el-icon) {
-  font-size: 24px;
+  font-size: 18px;
 }
 
 .tab-label {
-  font-size: 15px;
+  font-size: 12px;
 }
 </style>

@@ -2,6 +2,7 @@
   <div class="chat-page">
     <el-button type="primary" @click="dialogVisible = true">打开聊天室操作面板</el-button>
 
+    <!-- 移除 destroy-on-close，修复关闭逻辑冲突 -->
     <el-dialog
       width="540px"
       v-model="dialogVisible"
@@ -213,8 +214,9 @@ const roomList = [
   { id: 8, name: '测试工程师交流大厅', online: 55, type: 'public', desc: '自动化测试、性能测试经验分享' },
 ]
 
-// 关闭弹窗重置所有数据
-const handleClose = () => {
+// 【修复重点】before-close 必须接收 done 参数并执行 done() 才能关闭弹窗
+const handleClose = (done: () => void) => {
+  // 重置表单数据
   createFormRef.value?.resetFields()
   joinFormRef.value?.resetFields()
   createForm.roomPwd = ''
@@ -223,7 +225,8 @@ const handleClose = () => {
   joinForm.pwd = ''
   joinForm.isPrivate = false
   currentSelectRoom.value = null
-  done()    
+  // 执行关闭
+  done()
 }
 
 // 搜索联想过滤

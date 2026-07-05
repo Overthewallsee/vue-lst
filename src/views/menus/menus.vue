@@ -26,8 +26,10 @@
         v-for="(item, index) in funcList"
         :key="index"
         class="func-card"
+        :class="{ 'func-card-clickable': item.name === '聊天室' }"
         :body-style="{ padding: '16px 10px' }"
         shadow="always"
+        @click="handleFuncClick(item)"
       >
         <div class="card-inner">
           <div class="icon-wrap">
@@ -89,6 +91,7 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import {
   House,
   DocumentCopy,
@@ -101,6 +104,14 @@ import {
   ArrowRight,
   Document
 } from '@element-plus/icons-vue'
+
+const router = useRouter()
+
+const handleFuncClick = (item) => {
+  if (item.name === '聊天室') {
+    router.push('/features/chat')
+  }
+}
 
 const funcList = [
   { icon: DocumentChecked, name: '扫码付款', desc: '搜索服务、订单、优惠' },
@@ -217,6 +228,10 @@ const tabList = [
 .func-card:hover {
   transform: translateY(-1px);
   background: #f9fbff;
+}
+
+.func-card-clickable {
+  cursor: pointer;
 }
 
 .card-inner {

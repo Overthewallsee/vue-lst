@@ -252,6 +252,10 @@ import { connectSocket, disconnectSocket, onMessageReceive, offMessageReceive } 
 
 const router = useRouter()
 
+const getAuthHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+})
+
 // DOM 滚动容器
 const messageScrollRef = ref<HTMLDivElement | null>(null)
 const isUserScrollUp = ref(false)
@@ -331,7 +335,9 @@ onUnmounted(() => {
 const loadAllRoomList = async () => {
   groupLoading.value = true
   try {
-    const res = await axios.get('/ai_lst/chatroom/list')
+    const res = await axios.get('/ai_lst/chatroom/list', {
+      headers: getAuthHeaders()
+    })
     const rawData = res.data
     groupList.value = Array.isArray(rawData) ? rawData : []
   } catch (err) {
@@ -359,8 +365,12 @@ const switchGroup = async (group: any) => {
 
   try {
     const [memberRes, msgRes] = await Promise.all([
-      axios.get(`/ai_lst/chatroom/members?roomId=${group.id}`),
-      axios.get(`/ai_lst/chatroom/message/list?roomId=${group.id}`)
+      axios.get(`/ai_lst/chatroom/members?roomId=${group.id}`, {
+        headers: getAuthHeaders()
+      }),
+      axios.get(`/ai_lst/chatroom/message/list?roomId=${group.id}`, {
+        headers: getAuthHeaders()
+      })
     ])
     originMemberList.value = Array.isArray(memberRes.data) ? memberRes.data : []
     messageList.value = Array.isArray(msgRes.data) ? msgRes.data : []
@@ -428,6 +438,8 @@ const sendMessage = async () => {
     await axios.post('/ai_lst/chatroom/message/send', {
       roomId: currentGroup.value.id,
       content: text
+    }, {
+      headers: getAuthHeaders()
     })
     sendText.value = ''
     ElMessage.success('消息发送成功')
@@ -456,7 +468,9 @@ const submitForm = async () => {
         description: createForm.desc,
         password: createForm.authType === 'private' ? createForm.roomPwd : null
       }
-      const res = await axios.post('/ai_lst/chatroom/create', reqBody)
+      const res = await axios.post('/ai_lst/chatroom/create', reqBody, {
+        headers: getAuthHeaders()
+      })
       ElMessage.success('聊天室创建成功！')
       // 1. 先关闭弹窗（放在最前面，保证一定会执行）
       dialogVisible.value = false

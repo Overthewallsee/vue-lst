@@ -66,6 +66,15 @@
             :rules="regRules"
             label-width="0"
           >
+            <el-form-item prop="username">
+              <el-input v-model="regForm.username" placeholder="请输入用户名" />
+            </el-form-item>
+            <el-form-item prop="nickname">
+              <el-input v-model="regForm.nickname" placeholder="请输入昵称" />
+            </el-form-item>
+            <el-form-item prop="email">
+              <el-input v-model="regForm.email" placeholder="请输入邮箱" />
+            </el-form-item>
             <el-form-item prop="phone">
               <el-input v-model="regForm.phone" placeholder="请输入手机号" prefix-icon="Phone" />
             </el-form-item>
@@ -97,7 +106,14 @@
               </el-checkbox>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" class="submit-btn">注册</el-button>
+              <el-button
+                type="primary"
+                class="submit-btn"
+                :loading="registerLoading"
+                @click="handleRegister"
+              >
+                注册
+              </el-button>
             </el-form-item>
             <div class="tip-text">
               已有账号？
@@ -126,6 +142,7 @@ const pwdVisible = ref(false)
 const loginLoading = ref(false)
 // 验证码倒计时
 const countDown = ref(0)
+const registerLoading = ref(false)
 let timer = null
 
 // ====================== 登录表单 ======================
@@ -149,7 +166,7 @@ const handleLogin = async () => {
     loginLoading.value = true
     try {
       // POST 请求，入参对应后端 LoginRequest DTO
-      const res = await axios.post('http://localhost:8080/ai_lst/user/login', {
+      const res = await axios.post('/ai_lst/user/login', {
         username: loginForm.username,
         password: loginForm.password
       })
@@ -181,6 +198,9 @@ const handleLogin = async () => {
 // ====================== 注册表单 ======================
 const regFormRef = ref(null)
 const regForm = reactive({
+  username: '',
+  nickname: '',
+  email: '',
   phone: '',
   code: '',
   password: '',
@@ -189,6 +209,12 @@ const regForm = reactive({
 })
 // 注册校验规则
 const regRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+  ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式错误', trigger: 'blur' }
@@ -208,6 +234,39 @@ const regRules = {
   agree: [{ required: true, message: '请勾选同意协议', trigger: 'change' }]
 }
 
+// 注册接口请求
+const handleRegister = async () => {
+  await regFormRef.value.validate(async valid => {
+    if (!valid) return
+    registerLoading.value = true
+    try {
+      const payload = {
+        username: regForm.username.trim(),
+        password: regForm.password,
+        nickname: regForm.nickname.trim(),
+        phone: regForm.phone,
+        email: regForm.email.trim()
+      }
+
+      const res = await axios.post('/ai_lst/user/register', payload)
+      const success = res.data?.code === 200 || res.data?.code === 201 || res.data?.success === true
+
+      if (success) {
+        ElMessage.success(res.data?.msg || '注册成功')
+        regFormRef.value.resetFields()
+        activeTab.value = 'login'
+      } else {
+        ElMessage.error(res.data?.msg || '注册失败')
+      }
+    } catch (err) {
+      ElMessage.error('网络异常，请检查服务地址')
+      console.error('注册接口错误：', err)
+    } finally {
+      registerLoading.value = false
+    }
+  })
+}
+
 // 获取验证码倒计时
 const getCode = () => {
   if (countDown.value > 0) return
@@ -224,7 +283,7 @@ const getCode = () => {
 .login-container {
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, white 0%, #ffffff 100%);
   display: flex;
   align-items: center;
   justify-content: center;

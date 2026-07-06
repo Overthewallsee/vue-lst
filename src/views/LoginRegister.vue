@@ -127,7 +127,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import CryptoJS from 'crypto-js'
@@ -303,15 +303,41 @@ const handleRegister = async () => {
 }
 
 // 获取验证码倒计时
-const getCode = () => {
+const getCode = async () => {
   if (countDown.value > 0) return
-  countDown.value = 60
-  timer = setInterval(() => {
-    countDown.value--
-    if (countDown.value <= 0) clearInterval(timer)
-  }, 1000)
-  ElMessage.success('验证码已发送')
+
+  if (!regForm.email) {
+    ElMessage.warning('请输入邮箱后再获取验证码')
+    return
+  }
+
+  try {
+    const res = await axios.post('/ai_lst/user/send-email-code', {
+      email: regForm.email.trim()
+    })
+
+    if (res.data?.code === 200 || res.data?.success === true) {
+      countDown.value = 60
+      timer = setInterval(() => {
+        countDown.value--
+        if (countDown.value <= 0) {
+          clearInterval(timer)
+          timer = null
+        }
+      }, 1000)
+      ElMessage.success(res.data?.msg || '验证码已发送，请注意查收')
+    } else {
+      ElMessage.error(res.data?.msg || '验证码发送失败，请稍后重试')
+    }
+  } catch (err) {
+    ElMessage.error('网络异常，请检查服务地址')
+    console.error('发送验证码接口错误：', err)
+  }
 }
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 </script>
 
 <style scoped>

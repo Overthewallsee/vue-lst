@@ -1,131 +1,5 @@
 <template>
   <div class="chat-page-wrap">
-    <!-- 创建/加入聊天室弹窗 -->
-    <el-dialog
-      width="540px"
-      v-model="dialogVisible"
-      :close-on-click-modal="false"
-    >
-      <template #header>
-        <div class="dialog-header-wrap">
-          <span class="dialog-title">{{ activeTab === 'create' ? '创建聊天室' : '加入聊天室' }}</span>
-          <el-icon @click="goBackFeatures" class="back-icon">
-            <ArrowLeft />
-          </el-icon>
-        </div>
-      </template>
-
-      <el-tabs v-model="activeTab" type="card" class="mt-0">
-        <!-- 创建聊天室 Tab -->
-        <el-tab-pane label="创建聊天室" name="create">
-          <el-form
-            ref="createFormRef"
-            :model="createForm"
-            label-width="110px"
-            :rules="createRules"
-          >
-            <el-form-item label="房间名称" prop="roomName">
-              <el-input v-model="createForm.roomName" placeholder="请输入聊天室名称" maxlength="50" />
-            </el-form-item>
-            <el-form-item label="房间简介" prop="desc">
-              <el-input
-                v-model="createForm.desc"
-                type="textarea"
-                :rows="3"
-                maxlength="200"
-                placeholder="简单描述房间用途/公告"
-              />
-            </el-form-item>
-            <el-form-item label="房间权限" prop="authType">
-              <el-radio-group v-model="createForm.authType">
-                <el-radio label="public">公开房间</el-radio>
-                <el-radio label="private">私密房间</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="房间访问密码" prop="roomPwd" v-if="createForm.authType === 'private'">
-              <el-input
-                v-model="createForm.roomPwd"
-                show-password
-                maxlength="100"
-                placeholder="私密房间必须设置访问密码"
-              />
-            </el-form-item>
-            <el-form-item label="最大在线人数" prop="maxUser">
-              <el-select v-model="createForm.maxUser" placeholder="选择人数上限">
-                <el-option label="50人" :value="50" />
-                <el-option label="100人" :value="100" />
-                <el-option label="200人" :value="200" />
-                <el-option label="500人" :value="500" />
-              </el-select>
-            </el-form-item>
-            <el-divider content-position="left">消息防堆积优化配置</el-divider>
-            <el-form-item label="性能配置">
-              <el-checkbox-group v-model="createForm.optimizeList">
-                <el-checkbox label="autoClear">开启自动本地清屏，最多保存100条实时消息</el-checkbox>
-                <el-checkbox label="hideDanmu">自动屏蔽进场、礼物、弹幕低优先级消息</el-checkbox>
-                <el-checkbox label="limitSend">开启用户发送限流，单人每秒最多发送2条消息</el-checkbox>
-              </el-checkbox-group>
-            </el-form-item>
-          </el-form>
-        </el-tab-pane>
-
-        <!-- 加入聊天室 Tab -->
-        <el-tab-pane label="加入聊天室" name="join">
-          <el-form
-            ref="joinFormRef"
-            :model="joinForm"
-            label-width="110px"
-            :rules="joinRules"
-          >
-            <el-form-item label="搜索房间" prop="roomKey">
-              <el-autocomplete
-                v-model="joinForm.roomKey"
-                :fetch-suggestions="querySearchAsync"
-                placeholder="输入房间名称搜索"
-                @select="handleSelectRoom"
-                clearable
-              />
-            </el-form-item>
-            <div class="room-info-card" v-if="currentSelectRoom">
-              <div class="info-title">选中房间信息</div>
-              <div class="info-row">
-                <span class="label">房间名称：</span>
-                <span class="value">{{ currentSelectRoom.name }}</span>
-                <el-tag :type="currentSelectRoom.type === 'public' ? 'success' : 'warning'" size="small">
-                  {{ currentSelectRoom.type === 'public' ? '公开房间' : '私密房间' }}
-                </el-tag>
-              </div>
-              <div class="info-row">
-                <span class="label">在线人数：</span>
-                <span class="value">{{ currentSelectRoom.online }} 人在线</span>
-              </div>
-              <div class="info-row">
-                <span class="label">房间公告：</span>
-                <span class="value">{{ currentSelectRoom.description }}</span>
-              </div>
-            </div>
-            <el-form-item label="房间密码" prop="pwd" v-if="joinForm.isPrivate" class="mt-3">
-              <el-input
-                v-model="joinForm.pwd"
-                show-password
-                placeholder="该房间为私密房间，请输入访问密码"
-              />
-            </el-form-item>
-            <div class="tip-text mt-3">房间消息过载时将自动开启降噪清屏，保障页面流畅</div>
-          </el-form>
-        </el-tab-pane>
-      </el-tabs>
-
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="goBackFeatures">取消</el-button>
-          <el-button type="primary" @click="submitForm" :loading="submitLoading">
-            {{ activeTab === 'create' ? '创建聊天室' : '加入聊天室' }}
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
-
     <!-- 三栏聊天主界面 -->
     <div class="chat-container">
       <!-- 左侧群组列表 -->
@@ -141,7 +15,6 @@
           :key="group.id"
           @click="switchGroup(group)"
           :class="{ active: currentGroup?.id === group.id }"
-          v-if="group"
         >
           <div class="group-top">
             <span class="group-name">{{ group.name }}</span>
@@ -168,7 +41,7 @@
         </div>
         <div class="message-wrap" ref="messageScrollRef" @scroll="handleScroll">
           <div v-if="loadingGroup" class="loading-tip">加载历史消息中...</div>
-          <div class="message-item" v-for="msg in messageList" :key="msg.id" :class="{ self: msg.isSelf }" v-if="msg">
+          <div class="message-item" v-for="msg in messageList" :key="msg.id" :class="{ self: msg.isSelf }">
             <div class="msg-avatar">{{ msg.username?.slice(0, 1) || '我' }}</div>
             <div class="msg-content-wrap">
               <div class="msg-user">
@@ -212,7 +85,7 @@
         <el-input v-model="memberSearchKey" placeholder="搜索成员" clearable size="small" class="member-search" />
         <div v-if="memberLoading" class="loading-tip">加载成员...</div>
         <div class="member-online-title">在线成员</div>
-        <div class="member-item" v-for="member in onlineMemberList" :key="member.id" v-if="member">
+        <div class="member-item" v-for="member in onlineMemberList" :key="member.id">
           <el-icon class="status-dot online" :color="'#00c48c'">
             <CirclePlus />
           </el-icon>
@@ -220,7 +93,7 @@
           <span class="member-tag admin" v-if="member.isAdmin">管理员</span>
         </div>
         <div class="member-offline-title">离线成员</div>
-        <div class="member-item" v-for="member in offlineMemberList" :key="member.id" v-if="member">
+        <div class="member-item" v-for="member in offlineMemberList" :key="member.id">
           <el-icon class="status-dot offline" :color="'#c0c4cc'">
             <CirclePlus />
           </el-icon>
@@ -232,14 +105,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, nextTick, watch, onMounted, onUnmounted, computed } from 'vue'
+import { ref, nextTick, watch, onMounted, onUnmounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
-import { CirclePlus, Lock, ArrowLeft } from '@element-plus/icons-vue'
+import { useRouter, useRoute } from 'vue-router'
+import { CirclePlus, Lock } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { connectSocket, disconnectSocket, onMessageReceive, offMessageReceive } from '@/utils/socket'
+import { connectSocket, disconnectSocket, onMessageReceive, offMessageReceive, sendSocketMessage } from '../../utils/socket'
 
 const router = useRouter()
+const route = useRoute()
 
 // DOM 滚动容器
 const messageScrollRef = ref<HTMLDivElement | null>(null)
@@ -259,7 +133,6 @@ const sendText = ref('')
 
 // 缓存上次房间ID
 const lastSelectGroupId = ref<number | null>(null)
-const dialogVisible = ref(true)
 
 // 当前选中房间对象
 const currentGroup = ref<{
@@ -305,10 +178,13 @@ const handleSocketMessage = (data: any) => {
 onMounted(async () => {
   await loadAllRoomList()
   onMessageReceive(handleSocketMessage)
-  // 恢复上次浏览房间
-  if (lastSelectGroupId.value) {
-    const target = groupList.value.find(g => g?.id === lastSelectGroupId.value)
-    if (target) switchGroup(target)
+
+  const queryRoomId = Number(route.query.roomId)
+  if (queryRoomId && !currentGroup.value) {
+    const target = groupList.value.find(g => g?.id === queryRoomId || String(g?.id) === String(route.query.roomId))
+    if (target) {
+      switchGroup(target)
+    }
   }
 })
 
@@ -317,15 +193,32 @@ onUnmounted(() => {
   offMessageReceive(handleSocketMessage)
   disconnectSocket()
 })
+const getAuthHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+})
+
+const normalizeGroup = (item: any) => ({
+  id: item.id ?? item.roomId ?? item.room_id ?? item.roomID ?? 0,
+  name: item.name ?? item.roomName ?? item.room_name ?? item.title ?? '聊天室',
+  description: item.description ?? item.desc ?? item.roomDesc ?? item.notice ?? item.announcement ?? '',
+  online: item.online ?? item.onlineCount ?? item.currentOnline ?? item.userCount ?? item.memberCount ?? 0,
+  maxUser: item.maxUser ?? item.maxUsers ?? item.max_user ?? item.capacity ?? item.limit ?? 0,
+  type: item.type ?? (item.private || item.isPrivate ? 'private' : 'public'),
+  unread: item.unread ?? item.unreadCount ?? 0
+})
 
 // 1. 加载全部聊天室列表 【修复数组兜底】
 const loadAllRoomList = async () => {
   groupLoading.value = true
   try {
-    const res = await axios.get('/ai_lst/chatroom/list')
-    // 强制校验数组，非数组赋值空数组
+    const res = await axios.get('/ai_lst/chatroom/list', { headers: getAuthHeaders() })
     const rawData = res.data
-    groupList.value = Array.isArray(rawData) ? rawData : []
+    const list = Array.isArray(rawData)
+      ? rawData
+      : Array.isArray(rawData?.data)
+      ? rawData.data
+      : []
+    groupList.value = list.map(normalizeGroup)
   } catch (err) {
     ElMessage.error('加载聊天室列表失败')
   } finally {
@@ -354,8 +247,8 @@ const switchGroup = async (group: any) => {
 
   try {
     const [memberRes, msgRes] = await Promise.all([
-      axios.get(`/ai_lst/chatroom/members?roomId=${group.id}`),
-      axios.get(`/ai_lst/chatroom/message/list?roomId=${group.id}`)
+      axios.get(`/ai_lst/chatroom/${group.id}/members`, { headers: getAuthHeaders() }),
+      { data: []}
     ])
     // 双重兜底空数组
     originMemberList.value = Array.isArray(memberRes.data) ? memberRes.data : []
@@ -412,7 +305,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
 }
 
 // 发送聊天消息接口
-const sendMessage = async () => {
+const sendMessage = () => {
   if (!currentGroup.value) {
     ElMessage.warning('请先选择聊天室')
     return
@@ -421,14 +314,18 @@ const sendMessage = async () => {
   if (!text) return
   submitLoading.value = true
   try {
-    await axios.post('/ai_lst/chatroom/message/send', {
+    const success = sendSocketMessage({
       roomId: currentGroup.value.id,
       content: text
     })
+    if (!success) {
+      ElMessage.error('实时连接未就绪，请稍后重试')
+      return
+    }
     sendText.value = ''
-    ElMessage.success('消息发送成功')
-  } catch (err: any) {
-    ElMessage.error(err.response?.data?.message || '消息发送失败，请重试')
+  } catch (err) {
+    ElMessage.error('消息发送失败，请重试')
+    console.error('STOMP发送失败：', err)
   } finally {
     submitLoading.value = false
   }
@@ -439,207 +336,15 @@ const reSendMsg = (msg: any) => {
   sendText.value = msg.content
 }
 
-// 创建/加入聊天室弹窗提交
-const submitForm = async () => {
-  if (activeTab.value === 'create') {
-    const valid = await createFormRef.value.validate()
-    if (!valid) return
-    submitLoading.value = true
-    try {
-      const reqBody = {
-        name: createForm.roomName,
-        description: createForm.desc,
-        password: createForm.authType === 'private' ? createForm.roomPwd : null
-      }
-      await axios.post('/ai_lst/chatroom/create', reqBody)
-      ElMessage.success('聊天室创建成功！')
-      dialogVisible.value = false
-      createFormRef.value.resetFields()
-      createForm.roomPwd = ''
-      loadAllRoomList()
-    } catch (err: any) {
-      ElMessage.error(err.response?.data?.message || '创建聊天室失败')
-    } finally {
-      submitLoading.value = false
-    }
-  } else {
-    const valid = await joinFormRef.value.validate()
-    if (valid) {
-      ElMessage.success('成功加入聊天室！')
-      dialogVisible.value = false
-    }
-  }
-}
-
 // 返回功能页路由跳转
 const goBackFeatures = () => {
-  createFormRef.value?.resetFields()
-  joinFormRef.value?.resetFields()
-  createForm.roomPwd = ''
-  joinForm.roomKey = ''
-  joinForm.targetRoomId = ''
-  joinForm.pwd = ''
-  joinForm.isPrivate = false
   currentGroup.value = null
   disconnectSocket()
   router.push('/features')
 }
-
-// 下拉搜索匹配 【修复数组判断】
-const querySearchAsync = (queryStr: string, callback: Function) => {
-  let result: any[] = []
-  // 前置数组校验，防止 filter 报错
-  if (queryStr && Array.isArray(groupList.value)) {
-    result = groupList.value
-      .filter(item => item?.name?.includes(queryStr))
-      .map(item => ({
-        value: item.name,
-        id: item.id,
-        online: item.online,
-        type: item.type,
-        desc: `${item.name} | 在线${item.online}人 | ${item.type === 'public' ? '公开' : '私密'}`
-      }))
-  }
-  callback(result)
-}
-
-// 选中下拉房间
-const handleSelectRoom = (item: any) => {
-  const target = groupList.value.find(r => r.id === item.id)
-  if (target) {
-    currentSelectRoom.value = target
-    joinForm.targetRoomId = target.id
-    joinForm.isPrivate = target.type === 'private'
-    joinForm.pwd = ''
-  }
-}
-
-// 弹窗表单数据与校验
-const activeTab = ref('create')
-const createFormRef = ref(null)
-const createForm = reactive({
-  roomName: '',
-  desc: '',
-  authType: 'public',
-  roomPwd: '',
-  maxUser: 100,
-  optimizeList: ['autoClear', 'hideDanmu', 'limitSend']
-})
-const createRules = reactive({
-  roomName: [{ required: true, message: '请输入房间名称', trigger: 'blur' }],
-  authType: [{ required: true, message: '请选择房间权限', trigger: 'change' }],
-  maxUser: [{ required: true, message: '请选择人数上限', trigger: 'change' }],
-  roomPwd: [
-    {
-      required: true,
-      trigger: 'blur',
-      validator: (_rule: any, value: string, callback: Function) => {
-        if (createForm.authType === 'private' && !value) {
-          callback(new Error('私密房间必须设置访问密码'))
-        } else callback()
-      }
-    }
-  ]
-})
-
-const joinFormRef = ref(null)
-const joinForm = reactive({
-  roomKey: '',
-  targetRoomId: '',
-  pwd: '',
-  isPrivate: false
-})
-const currentSelectRoom = ref<{
-  id: number
-  name: string
-  description: string
-  online: number
-  maxUser: number
-  type: 'public' | 'private'
-  unread: number
-} | null>(null)
-const joinRules = reactive({
-  roomKey: [{ required: true, message: '请搜索并选择目标房间', trigger: 'blur' }],
-  pwd: [
-    {
-      required: true,
-      trigger: 'blur',
-      validator: (_rule: any, value: string, callback: Function) => {
-        if (joinForm.isPrivate && !value) {
-          callback(new Error('该房间为私密房间，必须填写访问密码'))
-        } else callback()
-      }
-    }
-  ]
-})
 </script>
 
 <style scoped>
-/* 弹窗通用样式 */
-.dialog-footer {
-  text-align: right;
-}
-.tip-text {
-  font-size: 12px;
-  color: #909399;
-}
-:deep(.el-tabs__header) {
-  margin-bottom: 16px;
-}
-.mt-3 {
-  margin-top: 12px;
-}
-.room-info-card {
-  background-color: #f5f7fa;
-  border-radius: 6px;
-  padding: 12px 16px;
-  margin-top: 8px;
-}
-.info-title {
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 8px;
-  color: #303133;
-}
-.info-row {
-  display: flex;
-  align-items: center;
-  margin: 6px 0;
-  font-size: 13px;
-}
-.label {
-  width: 80px;
-  color: #606266;
-}
-.value {
-  flex: 1;
-  color: #303133;
-}
-.el-tag {
-  margin-left: 8px;
-}
-.dialog-header-wrap {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-.dialog-title {
-  font-size: 16px;
-  font-weight: 600;
-}
-.back-icon {
-  font-size: 20px;
-  cursor: pointer;
-  color: #606266;
-}
-.back-icon:hover {
-  color: #409eff;
-}
-:deep(.el-dialog__headerbtn) {
-  display: none !important;
-}
-
 /* 全局滚动条美化 */
 :deep(::-webkit-scrollbar) {
   width: 6px;
@@ -735,6 +440,7 @@ const joinRules = reactive({
   margin: 4px 0;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

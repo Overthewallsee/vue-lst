@@ -9,11 +9,20 @@ export default defineConfig({
       '@': resolve(__dirname, 'src')
     }
   },
+   // 解决 sockjs global 未定义
+  define: {
+    global: 'window'
+  },
   server: {
     proxy: {
       '/ai_lst': {
         target: 'http://localhost:8080',
         changeOrigin: true
+      },
+      '/ai_lst/ws': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        ws: true
       }
     }
   }

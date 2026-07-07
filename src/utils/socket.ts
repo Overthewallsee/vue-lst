@@ -1,46 +1,56 @@
-let socket: WebSocket | null = null
+import { Client } from '@stomp/stompjs'
+
+let stompClient: Client | null = null
 let reconnectTimer: number | null = null
-let heartbeatTimer: number | null = null
-const heartbeatInterval = 5000
 const reconnectDelay = 3000
 
 // 消息回调缓存
 const messageCallbacks: ((data: any) => void)[] = []
 
-// 建立连接
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+const getWebSocketUrl = (roomId: number) => {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${window.location.host}/ai_lst/ws`
+}
+
+// 建立 STOMP 连接
 export function connectSocket(roomId: number) {
-  // 关闭旧连接
   disconnectSocket()
-  // 后端ws地址，本地8080
-  const wsUrl = `ws://localhost:8080/ai_lst/ws/chat?roomId=${roomId}`
-  socket = new WebSocket(wsUrl)
 
-  // 连接成功
-  socket.onopen = () => {
-    console.log('WebSocket 连接成功，房间ID：', roomId)
-    startHeartbeat()
-  }
+  const wsUrl = getWebSocketUrl(roomId)
+  stompClient = new Client({
+    brokerURL: wsUrl,
+    connectHeaders: getAuthHeaders(),
+    heartbeatIncoming: 20000,
+    heartbeatOutgoing: 20000,
+    reconnectDelay,
+    debug: () => {},
+    onConnect: () => {
+      console.log('STOMP 连接成功，房间ID：', roomId)
+      // 动态房间主题 /topic/room-1001
+      // const topic = `/topic/room-${roomId}`
+      stompClient?.subscribe("/topic/public", (frame) => {
+        const data = JSON.parse(frame.body)
+        messageCallbacks.forEach(cb => cb(data))
+      })
+      stompClient?.subscribe('/user/queue/private', (frame) => {
+        const data = JSON.parse(frame.body)
+        messageCallbacks.forEach(cb => cb(data))
+      })
+    },
+    onStompError: (frame) => {
+      console.error('STOMP 错误：', frame.headers['message'], frame.body)
+    },
+    onWebSocketError: (event) => {
+      console.error('WebSocket 错误：', event)
+    }
+  })
 
-  // 接收后端推送消息
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data)
-    // 执行所有订阅回调
-    messageCallbacks.forEach(cb => cb(data))
-  }
-
-  // 连接关闭
-  socket.onclose = () => {
-    clearHeartbeat()
-    // 自动重连
-    reconnectTimer = window.setTimeout(() => {
-      connectSocket(roomId)
-    }, reconnectDelay)
-  }
-
-  // 连接错误
-  socket.onerror = (err) => {
-    console.error('WebSocket 连接异常', err)
-  }
+  stompClient.activate()
 }
 
 // 订阅消息回调
@@ -54,24 +64,32 @@ export function offMessageReceive(cb: (data: any) => void) {
   if (index > -1) messageCallbacks.splice(index, 1)
 }
 
+// 发送 STOMP 消息
+export function sendSocketMessage(payload: any) {
+  if (!stompClient || !stompClient.active) return false
+  if (payload?.type === '2') {
+    stompClient.publish({
+      destination: '/app/broadcast',
+      body: JSON.stringify(payload)
+    })
+  } else if (payload?.type === '1') {
+    stompClient.publish({
+      destination: '/app/private',
+      body: JSON.stringify(payload)
+    })
+  }
+  return true
+}
+
 // 关闭连接
 export function disconnectSocket() {
-  if (reconnectTimer) clearTimeout(reconnectTimer)
-  clearHeartbeat()
-  if (socket) {
-    socket.close()
-    socket = null
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
   }
-  messageCallbacks.length = 0
+  if (stompClient) {
+    stompClient.deactivate()
+    stompClient = null
+  }
 }
 
-// 心跳保活
-function startHeartbeat() {
-  heartbeatTimer = window.setInterval(() => {
-    socket?.send(JSON.stringify({ type: 'heartbeat' }))
-  }, heartbeatInterval)
-}
-
-function clearHeartbeat() {
-  if (heartbeatTimer) clearInterval(heartbeatTimer)
-}

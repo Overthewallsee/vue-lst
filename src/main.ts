@@ -1,3 +1,4 @@
+(window as any).global = window;
 import { createApp } from 'vue'
 import App from './App.vue'
 // Element Plus

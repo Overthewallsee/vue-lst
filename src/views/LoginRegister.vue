@@ -280,6 +280,7 @@ const handleRegister = async () => {
         password: encryptedPassword,
         nickname: regForm.nickname.trim(),
         phone: regForm.phone,
+        verificationCode: regForm.code,
         email: regForm.email.trim()
       }
 

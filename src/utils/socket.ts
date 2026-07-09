@@ -12,7 +12,21 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-const getWebSocketUrl = (roomId: number) => {
+const getWebSocketUrl = () => {
+  if (import.meta.env.DEV) {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${protocol}//${window.location.host}/ai_lst/ws`
+  }
+
+  const configuredBaseUrl = import.meta.env.VITE_WS_BASE_URL?.trim()
+  if (configuredBaseUrl) {
+    const normalizedBaseUrl = configuredBaseUrl.replace(/\/$/, '')
+    if (normalizedBaseUrl.endsWith('/ws') || normalizedBaseUrl.endsWith('/websocket')) {
+      return normalizedBaseUrl
+    }
+    return `${normalizedBaseUrl}/ai_lst/ws`
+  }
+
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   return `${protocol}//${window.location.host}/ai_lst/ws`
 }
@@ -21,9 +35,9 @@ const getWebSocketUrl = (roomId: number) => {
 export function connectSocket(roomId: number) {
   disconnectSocket()
 
-  const wsUrl = getWebSocketUrl(roomId)
+  const wsUrl = getWebSocketUrl()
   stompClient = new Client({
-    brokerURL: wsUrl,
+    brokerURL: "http://localhost:8080/ai_lst/ws",
     connectHeaders: getAuthHeaders(),
     heartbeatIncoming: 20000,
     heartbeatOutgoing: 20000,

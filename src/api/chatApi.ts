@@ -7,7 +7,7 @@ export function getChatRoomList() {
 
 // 2. 根据房间id获取群成员
 export function getRoomMembers(roomId: number) {
-  return request.get(`/ai_lst/chatroom/members?roomId=${roomId}`)
+  return request.get(`/ai_lst/chatroom/${roomId}/members`)
 }
 
 // 3. 获取房间历史消息

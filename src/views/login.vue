@@ -119,6 +119,7 @@ function encryptPassword(password) {
   // 使用AES加密，这里使用一个固定的密钥，实际项目中应该从环境变量获取
   const secretKey = 'LST_LOGIN_SECRET_KEY_2024'
   const encrypted = CryptoJS.AES.encrypt(password, secretKey).toString()
+  console.log('加密后的密码：', encrypted)
   return encrypted
 }
 

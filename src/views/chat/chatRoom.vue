@@ -242,8 +242,8 @@ const switchGroup = async (group: any) => {
   sendText.value = ''
 
   // 断开旧WS，新建当前房间连接
-  disconnectSocket()
-  connectSocket(group.id)
+  // disconnectSocket()
+  // connectSocket(group.id)
 
   try {
     const [memberRes, msgRes] = await Promise.all([
@@ -316,6 +316,7 @@ const sendMessage = () => {
   try {
     const success = sendSocketMessage({
       roomId: currentGroup.value.id,
+      type: '2',
       content: text
     })
     if (!success) {
